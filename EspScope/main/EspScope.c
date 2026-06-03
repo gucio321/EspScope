@@ -26,7 +26,7 @@
         #define WIFI_SSID       "ESP_SCOPE"
 #endif // CONFIG_AP_NAME
 
-#define WIFI_PASS       "12345678"
+#define WIFI_PASS       CONFIG_AP_PASSWORD
 #define WIFI_CHANNEL    6
 #define MAX_STA_CONN    1
 
