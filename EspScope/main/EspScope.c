@@ -17,7 +17,7 @@
 
 #include "esp_http_server.h"
 
-#include "driver/adc_continuous.h"
+#include "esp_adc/adc_continuous.h"
 #include "hal/adc_types.h"
 
 #define WIFI_SSID       "ESP_SCOPE"
@@ -27,7 +27,7 @@
 
 #define ADC_UNIT        ADC_UNIT_1
 #define ADC_CHANNEL     ADC_CHANNEL_0   // GPIO0 on ESP32-C3
-#define ADC_ATTEN       ADC_ATTEN_DB_11
+#define ADC_ATTEN       ADC_ATTEN_DB_12
 #define ADC_BIT_WIDTH   SOC_ADC_DIGI_MAX_BITWIDTH
 
 #define SAMPLE_RATE_HZ  50000           // start conservative
@@ -77,6 +77,7 @@ static void wifi_init_softap(void)
         },
     };
 
+    // handle empty password configuration
     if (strlen(WIFI_PASS) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
