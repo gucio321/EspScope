@@ -17,10 +17,10 @@ type Header struct {
 	SampleCount uint16
 }
 
-func Listen(ip net.IP, udpPort int, samplesOut chan uint16, end chan bool) error {
+func Listen(udpPort int, samplesOut chan uint16, end chan bool) error {
 	addr := net.UDPAddr{
 		Port: udpPort,
-		IP:   ip,
+		IP:   net.IPv4zero,
 	}
 
 	conn, err := net.ListenUDP("udp", &addr)
