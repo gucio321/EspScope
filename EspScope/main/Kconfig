@@ -1,0 +1,18 @@
+menu "EspScope Configuration"
+    config AP_NAME
+        string "AP Name"
+        default "EspScope"
+        help
+            Access Point name
+
+    config ADC_CHAN_CUSTOM
+        bool "Use custom ADC channel"
+        default n
+
+    config ADC_CHAN
+        int "ADC channel"
+        depends on ADC_CHAN_CUSTOM
+        range 0 4
+        default 0
+
+endmenu

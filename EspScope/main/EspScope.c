@@ -20,13 +20,25 @@
 #include "esp_adc/adc_continuous.h"
 #include "hal/adc_types.h"
 
-#define WIFI_SSID       "ESP_SCOPE"
+#ifdef CONFIG_AP_NAME
+        #define WIFI_SSID       CONFIG_AP_NAME
+#else
+        #define WIFI_SSID       "ESP_SCOPE"
+#endif // CONFIG_AP_NAME
+
 #define WIFI_PASS       "12345678"
 #define WIFI_CHANNEL    6
 #define MAX_STA_CONN    1
 
 #define ADC_UNIT        ADC_UNIT_1
-#define ADC_CHANNEL     ADC_CHANNEL_0   // GPIO0 on ESP32-C3
+
+#if CONFIG_ADC_CHAN_CUSTOM
+        #define ADC_CHANNEL     CONFIG_ADC_CHAN
+#else
+        #define ADC_CHANNEL     ADC_CHANNEL_0   // GPIO0 on ESP32-C3
+#endif // CONFIG_ADC_CHAN
+
+
 #define ADC_ATTEN       ADC_ATTEN_DB_12
 #define ADC_BIT_WIDTH   SOC_ADC_DIGI_MAX_BITWIDTH
 
