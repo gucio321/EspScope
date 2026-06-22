@@ -33,12 +33,17 @@ type App struct {
 	}
 
 	espManager *espmanager.ESPManager
+
+	sampleRate int
+	data       []float64
 }
 
 func New() *App {
 	result := &App{
 		mutex: &sync.Mutex{},
 	}
+
+	result.setSampleRate(1024)
 
 	result.listener.end = make(chan bool)
 	result.listener.data = make(chan uint16, 1024)
@@ -50,6 +55,8 @@ func (a *App) Run() error {
 	a.startListen()
 	defer a.stopListen()
 
+	go a.scopeUpdater()
+
 	a.wnd = giu.NewMasterWindow(AppName, WindowW, WindowH, 0)
 
 	a.wnd.Run(a.loop)
@@ -58,6 +65,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) loop() {
+	sampleRate := int32(a.sampleRate)
 	giu.SingleWindow().Layout(
 		giu.Row(
 			giu.Style().
@@ -107,6 +115,19 @@ func (a *App) loop() {
 					}
 				}),
 			),
+			giu.Label("Sample Rate: "),
+			giu.InputInt(&sampleRate).OnChange(func() {
+				a.setSampleRate(int(sampleRate))
+			}),
+		),
+
+		giu.Plot("Scope").Plots(
+			giu.Line("A0", a.data),
 		),
 	)
+}
+
+func (a *App) setSampleRate(sr int) {
+	a.sampleRate = sr
+	a.data = make([]float64, sr)
 }
