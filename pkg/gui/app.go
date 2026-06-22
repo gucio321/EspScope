@@ -34,13 +34,16 @@ type App struct {
 
 	espManager *espmanager.ESPManager
 
-	sampleRate int
-	data       []float64
+	sampleRate             int
+	data                   []float64
+	minVoltage, maxVoltage float64
 }
 
 func New() *App {
 	result := &App{
-		mutex: &sync.Mutex{},
+		mutex:      &sync.Mutex{},
+		minVoltage: -12,
+		maxVoltage: 12,
 	}
 
 	result.setSampleRate(1024)
@@ -123,7 +126,9 @@ func (a *App) loop() {
 
 		giu.Plot("Scope").Plots(
 			giu.Line("A0", a.data),
-		),
+		).YLabel("Voltage [V]").
+			XFlags(giu.PlotAxisFlagsAutoFit).
+			YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce),
 	)
 }
 
