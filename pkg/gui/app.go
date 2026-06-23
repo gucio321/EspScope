@@ -2,10 +2,12 @@ package gui
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -20,6 +22,7 @@ import (
 const (
 	WindowW, WindowH    = 800, 600
 	AppName             = "ESP Scope"
+	AppID               = "EspScope" // Used for config
 	IPFieldSize         = 100
 	sampleRateFieldSize = 60
 	calibrationPopupID  = "Calibration##ESPScope"
@@ -72,6 +75,8 @@ func (a *App) Run() (err error) {
 	a.startListen()
 	defer a.stopListen()
 
+	a.loadConfig()
+
 	go a.scopeUpdater()
 
 	a.wnd = giu.NewMasterWindow(AppName, WindowW, WindowH, 0)
@@ -88,6 +93,21 @@ func (a *App) Run() (err error) {
 	a.wnd.Run(a.loop)
 
 	return nil
+}
+
+func (a *App) loadConfig() {
+	glg.Info("Reading config")
+	err := a.config.Load()
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		glg.Debugf("First project run! Welcome! Creating empty config file.")
+		a.saveConfig()
+	case err != nil:
+		glg.Errorf("Loading config file: %s", err)
+	}
+
+	a.ipStr = a.config.LastIP
+	a.updateIP()
 }
 
 func (a *App) loop() {
@@ -134,7 +154,7 @@ func (a *App) mainLayout() {
 				}()).SetDisabled(a.connected).
 				To(
 					giu.InputText(&a.ipStr).OnChange(func() {
-						a.ip = net.ParseIP(a.ipStr)
+						a.updateIP()
 					}).Size(IPFieldSize).Hint("192.168.4.1"),
 				),
 			giu.Style().SetDisabled(a.ip == nil).To(
@@ -147,6 +167,8 @@ func (a *App) mainLayout() {
 					if !a.connected == true {
 						a.connected = true
 						a.espManager = espmanager.New(a.ip)
+						a.config.LastIP = a.ipStr
+						a.saveConfig()
 					} else {
 						if err := a.espManager.EndConnection(); err != nil {
 							glg.Warn("Unable to properly end ESP connecction: %v", err)
@@ -222,6 +244,8 @@ you should see the signal laying on the X axis.
 
 					a.config.DriftVoltage += avg
 
+					a.saveConfig()
+
 					glg.Infof("Drift voltage updated by %v. Now is %v", avg, a.config.DriftVoltage)
 
 					sf.Start(animations.PlayForward)
@@ -254,4 +278,16 @@ you should see the signal laying on the X axis.
 			),
 		),
 	)
+}
+
+func (a *App) saveConfig() {
+	if err := a.config.Save(); err != nil {
+		glg.Errorf("Unable to save config file: %v", err)
+	}
+
+	glg.Debugf("Config saved.")
+}
+
+func (a *App) updateIP() {
+	a.ip = net.ParseIP(a.ipStr)
 }
