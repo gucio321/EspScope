@@ -14,6 +14,8 @@ github.com/gucio321/giu-animations/v2 v2.3.0 h1:dz2mZRwQLbu00dDy6UzpwBeLdLqRZ0a+
 github.com/gucio321/giu-animations/v2 v2.3.0/go.mod h1:2mz9IlOeYmoOamhmOmouVBulU4PRfz3BvrZKfa9w1bc=
 github.com/gucio321/glm-go v0.0.0-20241029220517-e1b5a3e011c8 h1:aczNwZRrReVWrZcqxvDjDmxP1NFISTAu+1Cp+3OCbUg=
 github.com/gucio321/glm-go v0.0.0-20241029220517-e1b5a3e011c8/go.mod h1:Z3+NtD1rjXUVZg97dojhs70i5oneOrZ1xcFKfF/c2Ts=
+github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f h1:dKccXx7xA56UNqOcFIbuqFjAWPVtP688j5QMgmo6OHU=
+github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f/go.mod h1:4rEELDSfUAlBSyUjPG0JnaNGjf13JySHFeRdD/3dLP0=
 github.com/kpango/fastime v1.1.9 h1:xVQHcqyPt5M69DyFH7g1EPRns1YQNap9d5eLhl/Jy84=
 github.com/kpango/fastime v1.1.9/go.mod h1:vyD7FnUn08zxY4b/QFBZVG+9EWMYsNl+QF0uE46urD4=
 github.com/kpango/glg v1.6.15 h1:nw0xSxpSyrDIWHeb3dvnE08PW+SCbK+aYFETT75IeLA=

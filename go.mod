@@ -15,6 +15,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gucio321/giu-animations/v2 v2.3.0 // indirect
 	github.com/gucio321/glm-go v0.0.0-20241029220517-e1b5a3e011c8 // indirect
+	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f // indirect
 	github.com/kpango/fastime v1.1.9 // indirect
 	github.com/mazznoer/csscolorparser v0.1.8 // indirect
 	github.com/napsy/go-css v1.0.0 // indirect
