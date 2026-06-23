@@ -18,6 +18,8 @@
 #include "esp_http_server.h"
 
 #include "esp_adc/adc_continuous.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 #include "hal/adc_types.h"
 
 #ifdef CONFIG_AP_NAME
@@ -50,12 +52,21 @@
 
 static const char *TAG = "esp_scope";
 
+static adc_cali_handle_t cali_handle;
+
 static adc_continuous_handle_t adc_handle;
 static volatile bool streaming = false;
 
 static int udp_sock = -1;
 static struct sockaddr_in client_addr;
 static uint32_t packet_seq = 0;
+
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_oneshot.h"
+
+#define ADC_MAX 4095
+
+uint16_t adc_lut[ADC_MAX + 1]; // adc lookup table. see table_handler
 
 typedef struct __attribute__((packed)) {
     uint32_t magic;
@@ -64,6 +75,35 @@ typedef struct __attribute__((packed)) {
     uint16_t sample_count;
     uint16_t samples[UDP_SAMPLES];
 } scope_packet_t;
+
+void build_adc_lut()
+{
+    for (int raw = 0; raw <= ADC_MAX; raw++) {
+        int mv = 0;
+
+        adc_cali_raw_to_voltage(cali_handle, raw, &mv);
+
+        if (mv < 0) mv = 0;
+        if (mv > 3300) mv = 3300;  // optional clamp
+
+        adc_lut[raw] = (uint16_t)mv;
+    }
+}
+
+void adc_init_fit(void)
+{
+    adc_cali_curve_fitting_config_t cali_config = {
+        .unit_id = ADC_UNIT,
+        .atten = ADC_ATTEN,
+        .bitwidth = ADC_BIT_WIDTH,
+    };
+
+    ESP_ERROR_CHECK(
+        adc_cali_create_scheme_curve_fitting(&cali_config, &cali_handle)
+    );
+
+    build_adc_lut();
+}
 
 static void wifi_init_softap(void)
 {
@@ -181,8 +221,44 @@ static esp_err_t root_handler(httpd_req_t *req)
         "ESP Scope\n"
         "Use:\n"
         "  /start?ip=192.168.4.2&port=5000\n"
+        "  /adc_table\n"
         "  /stop\n";
     httpd_resp_sendstr(req, msg);
+    return ESP_OK;
+}
+
+static esp_err_t table_handler(httpd_req_t *req)
+{
+    const size_t table_size_bytes = sizeof(adc_lut);
+
+    httpd_resp_set_type(req, "application/octet-stream");
+    httpd_resp_set_hdr(req, "Content-Disposition",
+                        "attachment; filename=\"adc_lut.bin\"");
+
+    size_t sent = 0;
+    const size_t chunk_size = 1024;
+
+    while (sent < table_size_bytes) {
+        size_t to_send = table_size_bytes - sent;
+        if (to_send > chunk_size) {
+            to_send = chunk_size;
+        }
+
+        int ret = httpd_resp_send_chunk(
+            req,
+            (const char *)((uint8_t *)adc_lut + sent),
+            to_send
+        );
+
+        if (ret != ESP_OK) {
+            return ESP_FAIL;
+        }
+
+        sent += to_send;
+    }
+
+    httpd_resp_send_chunk(req, NULL, 0); // finish transfer
+
     return ESP_OK;
 }
 
@@ -211,9 +287,17 @@ static void http_server_start(void)
         .handler = stop_handler,
     };
 
+    httpd_uri_t adc_table_uri = {
+        .uri      = "/adc_table",
+        .method   = HTTP_GET,
+        .handler  = table_handler,
+        .user_ctx = NULL
+    };
+
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &root_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &start_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &stop_uri));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &adc_table_uri));
 }
 
 static void udp_stream_task(void *arg)
@@ -286,6 +370,7 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
 
     wifi_init_softap();
+    adc_init_fit();
     adc_init_continuous();
     http_server_start();
 
@@ -301,3 +386,4 @@ void app_main(void)
     ESP_LOGI(TAG, "Ready. Connect to Wi-Fi '%s', then open http://192.168.4.1/",
              WIFI_SSID);
 }
+
