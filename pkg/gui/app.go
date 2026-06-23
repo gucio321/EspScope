@@ -46,7 +46,8 @@ type App struct {
 
 	logo *image.RGBA
 
-	espManager *espmanager.ESPManager
+	espManager  *espmanager.ESPManager
+	lookupTable *espmanager.LookupTable
 
 	sampleRate             int
 	data                   []float64
@@ -170,6 +171,15 @@ func (a *App) mainLayout() {
 						a.espManager = espmanager.New(a.ip)
 						a.config.LastIP = a.ipStr
 						a.saveConfig()
+
+						go func() {
+							var err error
+							a.lookupTable, err = a.espManager.GetLookupTable()
+							if err != nil {
+								// TODO: disconnect here
+								glg.Errorf("Unable to get ADC Lookup Table: %v", err)
+							}
+						}()
 					} else {
 						if err := a.espManager.EndConnection(); err != nil {
 							glg.Warn("Unable to properly end ESP connecction: %v", err)
