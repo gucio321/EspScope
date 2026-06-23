@@ -52,7 +52,8 @@ type App struct {
 	data                   []float64
 	minVoltage, maxVoltage float64
 
-	config *Config
+	config       *Config
+	knownVoltage float32
 }
 
 func New() *App {
@@ -255,7 +256,29 @@ you should see the signal laying on the X axis.
 
 		func(sf animations.StarterFunc) {
 			giu.Layout{
-				giu.Label("Stage 2: Voltage scale calculation."),
+				giu.Label(`Stage 2: Voltage scale calculation.
+Take a known voltage (e.g. from lab power supply, or battery checked with multimeter).
+Connect scope probes to that known voltage, then, enter the value below and press the button.
+`).Wrapped(true),
+
+				giu.Row(
+					giu.InputFloat(&a.knownVoltage),
+					giu.Button("Calibrate").OnClick(func() {
+						// take a snapshot of current data table.
+						data := make([]float64, len(a.data))
+						copy(data, a.data)
+
+						// calculate average
+						var avg float64
+						for _, x := range data {
+							avg += x
+						}
+
+						avg /= float64(len(data))
+
+						a.config.VoltageMultiplyer = float64(a.knownVoltage) / avg
+					}),
+				),
 			}.Build()
 		},
 	))

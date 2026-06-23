@@ -14,7 +14,6 @@ func (a *App) scopeUpdater() {
 func (a *App) ADCToVoltage(adc float64) (voltage float64) {
 	// TODO: Those values should be calibrated
 	const ADCMax = 4096
-	const VMax = 12
 
-	return (adc-ADCMax/2)/ADCMax*VMax - a.config.DriftVoltage
+	return ((adc-ADCMax/2)/ADCMax - a.config.DriftVoltage) * a.config.VoltageMultiplyer
 }

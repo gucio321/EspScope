@@ -12,12 +12,15 @@ import (
 const configFile = "config.json"
 
 type Config struct {
-	DriftVoltage float64
-	LastIP       string
+	DriftVoltage      float64
+	LastIP            string
+	VoltageMultiplyer float64
 }
 
 func NewConfig() *Config {
-	return &Config{}
+	return &Config{
+		VoltageMultiplyer: 1,
+	}
 }
 
 func ConfigPath() (string, error) {
