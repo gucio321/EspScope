@@ -1,11 +1,15 @@
 package gui
 
 import (
+	"bytes"
+	"fmt"
+	"image"
 	"image/color"
 	"net"
 	"sync"
 
 	"github.com/AllenDang/giu"
+	"github.com/gucio321/EspScope/pkg/assets"
 	"github.com/gucio321/EspScope/pkg/gui/espmanager"
 	"github.com/kpango/glg"
 	"golang.org/x/image/colornames"
@@ -61,6 +65,13 @@ func (a *App) Run() error {
 	go a.scopeUpdater()
 
 	a.wnd = giu.NewMasterWindow(AppName, WindowW, WindowH, 0)
+
+	logo, _, err := image.Decode(bytes.NewReader(assets.Logo))
+	if err != nil {
+		return fmt.Errorf("unable to decode logo image: %v", err)
+	}
+
+	a.wnd.SetIcon(logo)
 
 	a.wnd.Run(a.loop)
 
@@ -124,11 +135,17 @@ func (a *App) loop() {
 			}),
 		),
 
-		giu.Plot("Scope").Plots(
-			giu.Line("A0", a.data),
-		).YLabel("Voltage [V]").
-			XFlags(giu.PlotAxisFlagsAutoFit).
-			YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce),
+		giu.Style().
+			SetPlotColor(giu.StylePlotColorPlotBg, color.RGBA{0, 20, 0, 255}).
+			SetPlotColor(giu.StylePlotColorAxisGrid, color.RGBA{0, 100, 0, 255}).
+			To(
+				giu.Plot("Scope").Plots(
+					giu.Line("A0", a.data),
+				).YLabel("Voltage [V]").
+					XFlags(giu.PlotAxisFlagsAutoFit).
+					YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
+					Size(-1, -1),
+			),
 	)
 }
 
