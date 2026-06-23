@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/AllenDang/giu"
+	"github.com/dustin/go-humanize"
 	"github.com/gucio321/EspScope/pkg/assets"
 	"github.com/gucio321/EspScope/pkg/gui/espmanager"
 	animations "github.com/gucio321/giu-animations/v2"
@@ -26,6 +27,9 @@ const (
 	IPFieldSize         = 100
 	sampleRateFieldSize = 60
 	calibrationPopupID  = "Calibration##ESPScope"
+	ESPSampleRate       = 5e4 // from firmware
+	TimeTick            = 1 / ESPSampleRate
+	nTicks              = 5
 )
 
 var red = color.RGBA{100, 10, 10, 255}
@@ -50,6 +54,7 @@ type App struct {
 	lookupTable *espmanager.LookupTable
 
 	sampleRate             int
+	xTicks                 []giu.PlotTicker
 	data                   []float64
 	minVoltage, maxVoltage float64
 
@@ -82,6 +87,8 @@ func (a *App) Run() (err error) {
 	go a.scopeUpdater()
 
 	a.wnd = giu.NewMasterWindow(AppName, WindowW, WindowH, 0)
+
+	a.updatePlotTicks()
 
 	logo, _, err := image.Decode(bytes.NewReader(assets.Logo))
 	if err != nil {
@@ -221,7 +228,9 @@ func (a *App) mainLayout() {
 				).YLabel("Voltage [V]").
 					XFlags(giu.PlotAxisFlagsAutoFit).
 					YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
-					Size(-1, -1),
+					Size(-1, -1).
+					XTicks(a.xTicks, false).
+					XLabel("Time [s]"),
 			),
 	)
 }
@@ -229,6 +238,7 @@ func (a *App) mainLayout() {
 func (a *App) setSampleRate(sr int) {
 	a.sampleRate = sr
 	a.data = make([]float64, sr)
+	a.updatePlotTicks()
 }
 
 func (a *App) calibrationPopup() giu.Widget {
@@ -329,4 +339,14 @@ func (a *App) saveConfig() {
 
 func (a *App) updateIP() {
 	a.ip = net.ParseIP(a.ipStr)
+}
+
+func (a *App) updatePlotTicks() {
+	a.xTicks = make([]giu.PlotTicker, nTicks+1)
+	for i := range nTicks + 1 {
+		a.xTicks[i] = giu.PlotTicker{
+			Position: float64(i) * float64(a.sampleRate) / nTicks,
+			Label:    humanize.SI(float64(i)*TimeTick*float64(a.sampleRate)/nTicks, "s"),
+		}
+	}
 }
