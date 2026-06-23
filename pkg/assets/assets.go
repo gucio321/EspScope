@@ -4,5 +4,5 @@ import (
 	_ "embed"
 )
 
-//go:embed logo.jpg
+//go:embed logo.png
 var Logo []byte
