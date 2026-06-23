@@ -10,6 +10,8 @@ github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 h1:baVdMKlASEHr
 github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3/go.mod h1:VEPNJUlxl5KdWjDvz6Q1l+rJlxF2i6xqDeGuGAxa87M=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
+github.com/gucio321/giu-animations/v2 v2.3.0 h1:dz2mZRwQLbu00dDy6UzpwBeLdLqRZ0a+uA2AlYc6/Ro=
+github.com/gucio321/giu-animations/v2 v2.3.0/go.mod h1:2mz9IlOeYmoOamhmOmouVBulU4PRfz3BvrZKfa9w1bc=
 github.com/gucio321/glm-go v0.0.0-20241029220517-e1b5a3e011c8 h1:aczNwZRrReVWrZcqxvDjDmxP1NFISTAu+1Cp+3OCbUg=
 github.com/gucio321/glm-go v0.0.0-20241029220517-e1b5a3e011c8/go.mod h1:Z3+NtD1rjXUVZg97dojhs70i5oneOrZ1xcFKfF/c2Ts=
 github.com/kpango/fastime v1.1.9 h1:xVQHcqyPt5M69DyFH7g1EPRns1YQNap9d5eLhl/Jy84=
