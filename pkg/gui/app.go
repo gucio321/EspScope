@@ -286,7 +286,13 @@ Connect scope probes to that known voltage, then, enter the value below and pres
 
 						avg /= float64(len(data))
 
-						a.config.VoltageMultiplyer = float64(a.knownVoltage) / avg
+						newVM := float64(a.knownVoltage) / avg
+
+						glg.Infof("Updating voltage multiplyer %v => %v", a.config.VoltageMultiplyer, newVM)
+
+						a.config.VoltageMultiplyer = newVM
+
+						a.saveConfig()
 					}),
 				),
 			}.Build()
