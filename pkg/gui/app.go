@@ -7,10 +7,12 @@ import (
 	"image/color"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/AllenDang/giu"
 	"github.com/gucio321/EspScope/pkg/assets"
 	"github.com/gucio321/EspScope/pkg/gui/espmanager"
+	animations "github.com/gucio321/giu-animations/v2"
 	"github.com/kpango/glg"
 	"golang.org/x/image/colornames"
 )
@@ -24,17 +26,20 @@ const (
 var red = color.RGBA{100, 10, 10, 255}
 
 type App struct {
-	wnd       *giu.MasterWindow
-	ipStr     string
-	ip        net.IP
-	connected bool
-	listening bool
-	mutex     *sync.Mutex
+	wnd                   *giu.MasterWindow
+	ipStr                 string
+	ip                    net.IP
+	connected             bool
+	listening             bool
+	mutex                 *sync.Mutex
+	startWelcomeAnimation bool
 
 	listener struct {
 		data chan uint16
 		end  chan bool
 	}
+
+	logo *image.RGBA
 
 	espManager *espmanager.ESPManager
 
@@ -58,7 +63,7 @@ func New() *App {
 	return result
 }
 
-func (a *App) Run() error {
+func (a *App) Run() (err error) {
 	a.startListen()
 	defer a.stopListen()
 
@@ -73,12 +78,41 @@ func (a *App) Run() error {
 
 	a.wnd.SetIcon(logo)
 
+	a.logo = giu.ImageToRgba(logo)
+
 	a.wnd.Run(a.loop)
 
 	return nil
 }
 
 func (a *App) loop() {
+	animations.Animator(
+		animations.Transition(
+			func(sf animations.StarterFunc) {
+				if !a.startWelcomeAnimation {
+					sf.Start(animations.PlayForward)
+					a.startWelcomeAnimation = true
+				}
+				a.welcomeScreen()
+			},
+			func(sf animations.StarterFunc) {
+				a.mainLayout()
+			},
+		),
+	).
+		Duration(time.Second).
+		Build()
+}
+
+func (a *App) welcomeScreen() {
+	giu.SingleWindow().Layout(
+		giu.Align(giu.AlignCenter).To(
+			giu.ImageWithRgba(a.logo),
+		),
+	)
+}
+
+func (a *App) mainLayout() {
 	sampleRate := int32(a.sampleRate)
 	giu.SingleWindow().Layout(
 		giu.Row(
