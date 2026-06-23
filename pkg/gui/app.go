@@ -18,9 +18,11 @@ import (
 )
 
 const (
-	WindowW, WindowH = 800, 600
-	AppName          = "ESP Scope"
-	IPFieldSize      = 100
+	WindowW, WindowH    = 800, 600
+	AppName             = "ESP Scope"
+	IPFieldSize         = 100
+	sampleRateFieldSize = 60
+	calibrationPopupID  = "Calibration##ESPScope"
 )
 
 var red = color.RGBA{100, 10, 10, 255}
@@ -46,6 +48,8 @@ type App struct {
 	sampleRate             int
 	data                   []float64
 	minVoltage, maxVoltage float64
+
+	config *Config
 }
 
 func New() *App {
@@ -53,6 +57,7 @@ func New() *App {
 		mutex:      &sync.Mutex{},
 		minVoltage: -12,
 		maxVoltage: 12,
+		config:     NewConfig(),
 	}
 
 	result.setSampleRate(1024)
@@ -166,7 +171,12 @@ func (a *App) mainLayout() {
 			giu.Label("Sample Rate: "),
 			giu.InputInt(&sampleRate).OnChange(func() {
 				a.setSampleRate(int(sampleRate))
+			}).Size(sampleRateFieldSize),
+
+			giu.Button("Calibrate...").OnClick(func() {
+				giu.OpenPopup(calibrationPopupID)
 			}),
+			a.calibrationPopup(),
 		),
 
 		giu.Style().
@@ -186,4 +196,62 @@ func (a *App) mainLayout() {
 func (a *App) setSampleRate(sr int) {
 	a.sampleRate = sr
 	a.data = make([]float64, sr)
+}
+
+func (a *App) calibrationPopup() giu.Widget {
+	an := animations.Animator(animations.Transition(
+		func(sf animations.StarterFunc) {
+			giu.Layout{
+				giu.Label(`!st stage: Calibrate GND volatge.
+Please short read and black wires, Then press button below.
+
+This is calclated, by taking sampleRate of measurements and calculating the arithmetical average of those samples.
+The Drift voltage is then updated by the average value. The drift voltage is used to shift the plot. After this calibration,
+you should see the signal laying on the X axis.
+`).Wrapped(true),
+				giu.Button("Calculate").Size(-1, 0).OnClick(func() {
+					var avg float64
+					data := make([]float64, len(a.data))
+					copy(data, a.data)
+
+					for _, x := range data {
+						avg += x
+					}
+
+					avg /= float64(len(data))
+
+					a.config.DriftVoltage += avg
+
+					glg.Infof("Drift voltage updated by %v. Now is %v", avg, a.config.DriftVoltage)
+
+					sf.Start(animations.PlayForward)
+				}),
+			}.Build()
+		},
+
+		func(sf animations.StarterFunc) {
+			giu.Layout{
+				giu.Label("Stage 2: Voltage scale calculation."),
+			}.Build()
+		},
+	))
+
+	return giu.PopupModal(calibrationPopupID).Layout(
+		giu.Style().SetFontSize(26).To(
+			giu.Label("Calibration"),
+		),
+		giu.Separator(),
+		giu.Child().Layout(
+			an,
+		).Size(300, 200),
+		giu.Separator(),
+		giu.Align(giu.AlignRight).To(
+			giu.Row(
+				giu.Button("Skip >>").OnClick(func() {
+					an.Start(animations.PlayForward)
+				}),
+				giu.Button("Close").OnClick(giu.CloseCurrentPopup),
+			),
+		),
+	)
 }

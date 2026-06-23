@@ -16,5 +16,5 @@ func (a *App) ADCToVoltage(adc float64) (voltage float64) {
 	const ADCMax = 4096
 	const VMax = 12
 
-	return (adc - ADCMax/2) / ADCMax * VMax
+	return (adc-ADCMax/2)/ADCMax*VMax - a.config.DriftVoltage
 }
