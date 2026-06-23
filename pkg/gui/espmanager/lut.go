@@ -9,11 +9,15 @@ import (
 )
 
 type LookupTable struct {
-	data []uint16
+	data []float64
 }
 
 func NewLookupTable() *LookupTable {
 	return &LookupTable{}
+}
+
+func (l *LookupTable) ADCToV(adc uint16) float64 {
+	return l.data[adc]
 }
 
 func (m *ESPManager) GetLookupTable() (*LookupTable, error) {
@@ -29,7 +33,7 @@ func (m *ESPManager) GetLookupTable() (*LookupTable, error) {
 		return nil, fmt.Errorf("invalid response for URL %s (expected http status 200, but got %d): %v", url, resp.StatusCode, ErrInvalidResponse)
 	}
 
-	var table []uint16 = make([]uint16, 0, 4096)
+	var table []float64 = make([]float64, 0, 4096)
 
 reading:
 	for {
@@ -42,7 +46,7 @@ reading:
 			return nil, fmt.Errorf("decoding table: %v", err)
 		}
 
-		table = append(table, chunk)
+		table = append(table, float64(chunk)/1000) // convert mV -> V
 	}
 
 	result.data = table
