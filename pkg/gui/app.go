@@ -153,6 +153,7 @@ func (a *App) welcomeScreen() {
 func (a *App) mainLayout() {
 	sampleRate := int32(a.sampleRate)
 	giu.SingleWindowWithMenuBar().Layout(
+		a.calibrationPopup(),
 		giu.MenuBar().Layout(a.menuBar()),
 		giu.Row(
 			giu.Style().
@@ -216,10 +217,6 @@ func (a *App) mainLayout() {
 				a.setSampleRate(int(sampleRate))
 			}).Size(sampleRateFieldSize),
 
-			giu.Button("Calibrate...").OnClick(func() {
-				giu.OpenPopup(calibrationPopupID)
-			}),
-			a.calibrationPopup(),
 			giu.Checkbox("Freez", &a.freez),
 		),
 

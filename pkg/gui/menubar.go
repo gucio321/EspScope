@@ -14,6 +14,10 @@ func (a *App) menuBar() giu.Widget {
 
 func (a *App) fileMenu() giu.Widget {
 	return giu.Layout{
+		giu.MenuItem("Calibrate...").OnClick(func() {
+			giu.OpenPopup(calibrationPopupID)
+		}),
+		giu.Separator(),
 		giu.MenuItem("Quit").OnClick(a.Quit),
 	}
 }
