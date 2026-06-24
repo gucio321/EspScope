@@ -1,4 +1,4 @@
-package gui
+package config
 
 import (
 	"encoding/json"
@@ -9,7 +9,10 @@ import (
 	"github.com/kirsle/configdir"
 )
 
-const configFile = "config.json"
+const (
+	configFile = "config.json"
+	AppID      = "EspScope" // Used for config
+)
 
 type Config struct {
 	DriftVoltage      float64

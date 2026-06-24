@@ -14,6 +14,7 @@ import (
 	"github.com/AllenDang/giu"
 	"github.com/dustin/go-humanize"
 	"github.com/gucio321/EspScope/pkg/assets"
+	"github.com/gucio321/EspScope/pkg/config"
 	"github.com/gucio321/EspScope/pkg/gui/espmanager"
 	animations "github.com/gucio321/giu-animations/v2"
 	"github.com/kpango/glg"
@@ -23,7 +24,6 @@ import (
 const (
 	WindowW, WindowH    = 800, 600
 	AppName             = "ESP Scope"
-	AppID               = "EspScope" // Used for config
 	GHURL               = "https://github.com/gucio321/EspScope"
 	IPFieldSize         = 100
 	sampleRateFieldSize = 60
@@ -59,7 +59,7 @@ type App struct {
 	data                   []float64
 	minVoltage, maxVoltage float64
 
-	config       *Config
+	config       *config.Config
 	knownVoltage float32
 	freez        bool
 }
@@ -69,7 +69,7 @@ func New() *App {
 		mutex:      &sync.Mutex{},
 		minVoltage: -12,
 		maxVoltage: 12,
-		config:     NewConfig(),
+		config:     config.NewConfig(),
 	}
 
 	result.setSampleRate(1024)
