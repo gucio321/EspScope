@@ -24,6 +24,7 @@ const (
 	WindowW, WindowH    = 800, 600
 	AppName             = "ESP Scope"
 	AppID               = "EspScope" // Used for config
+	GHURL               = "https://github.com/gucio321/EspScope"
 	IPFieldSize         = 100
 	sampleRateFieldSize = 60
 	calibrationPopupID  = "Calibration##ESPScope"
@@ -60,6 +61,7 @@ type App struct {
 
 	config       *Config
 	knownVoltage float32
+	freez        bool
 }
 
 func New() *App {
@@ -87,6 +89,8 @@ func (a *App) Run() (err error) {
 	go a.scopeUpdater()
 
 	a.wnd = giu.NewMasterWindow(AppName, WindowW, WindowH, 0)
+
+	a.wnd.SetCloseCallback(a.onClose)
 
 	a.updatePlotTicks()
 
@@ -148,7 +152,8 @@ func (a *App) welcomeScreen() {
 
 func (a *App) mainLayout() {
 	sampleRate := int32(a.sampleRate)
-	giu.SingleWindow().Layout(
+	giu.SingleWindowWithMenuBar().Layout(
+		giu.MenuBar().Layout(a.menuBar()),
 		giu.Row(
 			giu.Style().
 				SetColor(giu.StyleColorFrameBg, func() color.Color {
@@ -203,9 +208,7 @@ func (a *App) mainLayout() {
 					}
 				}),
 				giu.Button("Stop stream").OnClick(func() {
-					if err := a.espManager.StopStream(); err != nil {
-						glg.Errorf("Unable to stop stream: %v", err)
-					}
+					a.stopStream()
 				}),
 			),
 			giu.Label("Sample Rate: "),
@@ -217,6 +220,7 @@ func (a *App) mainLayout() {
 				giu.OpenPopup(calibrationPopupID)
 			}),
 			a.calibrationPopup(),
+			giu.Checkbox("Freez", &a.freez),
 		),
 
 		giu.Style().
@@ -348,5 +352,25 @@ func (a *App) updatePlotTicks() {
 			Position: float64(i) * float64(a.sampleRate) / nTicks,
 			Label:    humanize.SI(float64(i)*TimeTick*float64(a.sampleRate)/nTicks, "s"),
 		}
+	}
+}
+
+func (a *App) Quit() {
+	a.wnd.Close()
+}
+
+func (a *App) onClose() bool {
+	if a.connected {
+		a.stopStream()
+	}
+
+	glg.Info("Closing...")
+
+	return true
+}
+
+func (a *App) stopStream() {
+	if err := a.espManager.StopStream(); err != nil {
+		glg.Errorf("Unable to stop stream: %v", err)
 	}
 }

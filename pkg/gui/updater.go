@@ -7,7 +7,9 @@ func (a *App) scopeUpdater() {
 			newData[i] = a.ADCToVoltage(<-a.listener.data)
 		}
 
-		copy(a.data, newData)
+		if !a.freez {
+			copy(a.data, newData)
+		}
 	}
 }
 
