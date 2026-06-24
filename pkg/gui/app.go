@@ -90,6 +90,8 @@ func (a *App) Run() (err error) {
 
 	a.wnd = giu.NewMasterWindow(AppName, WindowW, WindowH, 0)
 
+	a.wnd.SetStyle(a.theme())
+
 	a.wnd.SetCloseCallback(a.onClose)
 
 	a.updatePlotTicks()
@@ -370,4 +372,14 @@ func (a *App) stopStream() {
 	if err := a.espManager.StopStream(); err != nil {
 		glg.Errorf("Unable to stop stream: %v", err)
 	}
+}
+
+func (a *App) theme() *giu.StyleSetter {
+	result := a.wnd.GetStyle()
+
+	f := giu.Context.FontAtlas.AddFontFromBytes("MonaSans", assets.Font)
+	result.SetFont(f)
+	result.SetFontSize(20)
+
+	return result
 }

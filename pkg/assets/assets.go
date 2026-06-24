@@ -4,5 +4,9 @@ import (
 	_ "embed"
 )
 
-//go:embed logo.png
-var Logo []byte
+var (
+	//go:embed logo.png
+	Logo []byte
+	//go:embed MonaSans-Medium.ttf
+	Font []byte
+)
