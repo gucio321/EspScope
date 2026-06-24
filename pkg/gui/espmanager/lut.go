@@ -9,7 +9,8 @@ import (
 )
 
 type LookupTable struct {
-	data []float64
+	data     []float64
+	tableLen uint16
 }
 
 func NewLookupTable() *LookupTable {
@@ -17,6 +18,10 @@ func NewLookupTable() *LookupTable {
 }
 
 func (l *LookupTable) ADCToV(adc uint16) float64 {
+	if adc >= l.tableLen {
+		return 0
+	}
+
 	return l.data[adc]
 }
 
@@ -50,6 +55,7 @@ reading:
 	}
 
 	result.data = table
+	result.tableLen = uint16(len(table))
 
 	return result, nil
 }
