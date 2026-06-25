@@ -18,6 +18,10 @@ func (a *App) fileMenu() giu.Widget {
 			giu.OpenPopup(calibrationPopupID)
 		}),
 		giu.Separator(),
+		giu.MenuItem("Preferences").OnClick(func() {
+			giu.OpenPopup(preferencesPopupID)
+		}),
+		giu.Separator(),
 		giu.MenuItem("Quit").OnClick(a.Quit),
 	}
 }

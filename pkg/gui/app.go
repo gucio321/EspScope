@@ -27,7 +27,8 @@ const (
 	GHURL               = "https://github.com/gucio321/EspScope"
 	IPFieldSize         = 100
 	sampleRateFieldSize = 60
-	calibrationPopupID  = "Calibration##ESPScope"
+	calibrationPopupID  = "Calibration##" + config.AppID
+	preferencesPopupID  = "Preferences##" + config.AppID
 	ESPSampleRate       = 5e4 // from firmware
 	TimeTick            = 1 / ESPSampleRate
 	nTicks              = 5
@@ -67,13 +68,14 @@ type App struct {
 
 func New() *App {
 	result := &App{
-		mutex:      &sync.Mutex{},
-		minVoltage: -12,
-		maxVoltage: 12,
-		config:     config.NewConfig(),
+		mutex:       &sync.Mutex{},
+		minVoltage:  -12,
+		maxVoltage:  12,
+		config:      config.NewConfig(),
+		lookupTable: espmanager.NewLookupTable(),
 	}
 
-	result.setSampleRate(1024)
+	result.setSampleRate(config.DefaultSampleRate)
 
 	result.listener.end = make(chan bool)
 	result.listener.data = make(chan uint16, 1024)
@@ -126,6 +128,10 @@ func (a *App) loadConfig() {
 
 	a.ipStr = a.config.LastIP
 	a.updateIP()
+
+	if a.config.AutoConnect {
+		a.connect()
+	}
 }
 
 func (a *App) loop() {
@@ -156,9 +162,9 @@ func (a *App) welcomeScreen() {
 }
 
 func (a *App) mainLayout() {
-	sampleRate := int32(a.sampleRate)
 	giu.SingleWindowWithMenuBar().Layout(
 		a.calibrationPopup(),
+		a.preferencesPopup(),
 		giu.MenuBar().Layout(a.menuBar()),
 		giu.Row(
 			giu.Style().
@@ -193,18 +199,12 @@ func (a *App) mainLayout() {
 			),
 			giu.Style().SetDisabled(!a.isConnected()).To(
 				giu.Button("Start stream").OnClick(func() {
-					if err := a.espManager.StartStream(); err != nil {
-						glg.Error("Unable to start stream: %v", err)
-					}
+					a.startStream()
 				}),
 				giu.Button("Stop stream").OnClick(func() {
 					a.stopStream()
 				}),
 			),
-			giu.Label("Sample Rate: "),
-			giu.InputInt(&sampleRate).OnChange(func() {
-				a.setSampleRate(int(sampleRate))
-			}).Size(sampleRateFieldSize),
 
 			giu.Checkbox("Freez", &a.freez),
 			giu.Tooltip("Freez the plot. (F)"),
@@ -377,6 +377,10 @@ func (a *App) theme() *giu.StyleSetter {
 }
 
 func (a *App) connect() {
+	if a.ip == nil {
+		glg.Warn("Attempt to connect, but IP empty")
+	}
+
 	a.mutex.Lock()
 	a.connected = true
 	a.mutex.Unlock()
@@ -391,6 +395,10 @@ func (a *App) connect() {
 		if err != nil {
 			glg.Errorf("Unable to get ADC Lookup Table: %v", err)
 			a.disconnect(false)
+		}
+
+		if a.config.AutoStream {
+			a.startStream()
 		}
 	}()
 }
@@ -412,4 +420,10 @@ func (a *App) isConnected() bool {
 	defer a.mutex.Unlock()
 
 	return a.connected
+}
+
+func (a *App) startStream() {
+	if err := a.espManager.StartStream(); err != nil {
+		glg.Error("Unable to start stream: %v", err)
+	}
 }
