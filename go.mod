@@ -11,6 +11,7 @@ require (
 require (
 	github.com/AllenDang/cimgui-go v1.5.0 // indirect
 	github.com/AllenDang/go-findfont v0.0.0-20200702051237-9f180485aeb8 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gucio321/giu-animations/v2 v2.3.0 // indirect
