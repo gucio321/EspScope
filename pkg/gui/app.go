@@ -225,19 +225,15 @@ func (a *App) mainLayout() {
 			giu.Tooltip("Freez the plot. (F)"),
 		),
 
-		giu.Style().
-			SetPlotColor(giu.StylePlotColorPlotBg, color.RGBA{0, 20, 0, 255}).
-			SetPlotColor(giu.StylePlotColorAxisGrid, color.RGBA{0, 100, 0, 255}).
-			To(
-				giu.Plot("Scope").Plots(
-					giu.Line("A0", a.data),
-				).YLabel("Voltage [V]").
-					XFlags(giu.PlotAxisFlagsAutoFit).
-					YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
-					Size(-1, -1).
-					XTicks(a.xTicks, false).
-					XLabel("Time [s]"),
-			),
+		giu.Plot("Scope").Plots(
+			giu.Line("A0", a.data),
+		).YLabel("Voltage [V]").
+			XFlags(giu.PlotAxisFlagsAutoFit).
+			YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
+			Size(-1, -1).
+			XTicks(a.xTicks, false).
+			XLabel("Time [s]").
+			Flags(giu.PlotFlagsCrosshairs),
 	)
 }
 
@@ -251,7 +247,7 @@ func (a *App) calibrationPopup() giu.Widget {
 	an := animations.Animator(animations.Transition(
 		func(sf animations.StarterFunc) {
 			giu.Layout{
-				giu.Label(`!st stage: Calibrate GND volatge.
+				giu.Label(`1st stage: Calibrate GND volatge.
 Please short read and black wires, Then press button below.
 
 This is calclated, by taking sampleRate of measurements and calculating the arithmetical average of those samples.
@@ -390,7 +386,10 @@ func (a *App) theme() *giu.StyleSetter {
 		SetPlotColor(giu.StylePlotColorAxisBgHovered, color.RGBA{0, 100, 0, 255}).
 		SetColor(giu.StyleColorFrameBg, color.RGBA{0, 60, 0, 255}).
 		SetColor(giu.StyleColorButton, color.RGBA{0, 60, 0, 255}).
-		SetColor(giu.StyleColorButtonHovered, color.RGBA{0, 120, 0, 255})
+		SetColor(giu.StyleColorButtonHovered, color.RGBA{0, 120, 0, 255}).
+		SetPlotColor(giu.StylePlotColorPlotBg, color.RGBA{0, 20, 0, 255}).
+		SetPlotColor(giu.StylePlotColorAxisGrid, color.RGBA{0, 100, 0, 255}).
+		SetColor(giu.StyleColorChildBg, color.RGBA{0, 20, 0, 255})
 
 	return result
 }
