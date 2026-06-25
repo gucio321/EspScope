@@ -94,6 +94,8 @@ func (a *App) Run() (err error) {
 
 	a.wnd.SetCloseCallback(a.onClose)
 
+	a.wnd.RegisterKeyboardShortcuts(a.keyboardShortcuts()...)
+
 	a.updatePlotTicks()
 
 	logo, _, err := image.Decode(bytes.NewReader(assets.Logo))
@@ -220,6 +222,7 @@ func (a *App) mainLayout() {
 			}).Size(sampleRateFieldSize),
 
 			giu.Checkbox("Freez", &a.freez),
+			giu.Tooltip("Freez the plot. (F)"),
 		),
 
 		giu.Style().
