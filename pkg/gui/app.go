@@ -165,12 +165,12 @@ func (a *App) mainLayout() {
 					switch {
 					case a.ip == nil:
 						return red
-					case a.connected:
+					case a.isConnected():
 						return colornames.Green
 					default:
 						return color.RGBA{}
 					}
-				}()).SetDisabled(a.connected).
+				}()).SetDisabled(a.isConnected()).
 				To(
 					giu.InputText(&a.ipStr).OnChange(func() {
 						a.updateIP()
@@ -178,35 +178,19 @@ func (a *App) mainLayout() {
 				),
 			giu.Style().SetDisabled(a.ip == nil).To(
 				giu.Button(func() string {
-					if a.connected {
+					if a.isConnected() {
 						return "Disconnect"
 					}
 					return "Connect"
 				}()).OnClick(func() {
-					if !a.connected == true {
-						a.connected = true
-						a.espManager = espmanager.New(a.ip)
-						a.config.LastIP = a.ipStr
-						a.saveConfig()
-
-						go func() {
-							var err error
-							a.lookupTable, err = a.espManager.GetLookupTable()
-							if err != nil {
-								// TODO: disconnect here
-								glg.Errorf("Unable to get ADC Lookup Table: %v", err)
-							}
-						}()
+					if !a.isConnected() == true {
+						a.connect()
 					} else {
-						if err := a.espManager.EndConnection(); err != nil {
-							glg.Warn("Unable to properly end ESP connecction: %v", err)
-						}
-
-						a.connected = false
+						a.disconnect(true)
 					}
 				}),
 			),
-			giu.Style().SetDisabled(!a.connected).To(
+			giu.Style().SetDisabled(!a.isConnected()).To(
 				giu.Button("Start stream").OnClick(func() {
 					if err := a.espManager.StartStream(); err != nil {
 						glg.Error("Unable to start stream: %v", err)
@@ -358,7 +342,7 @@ func (a *App) Quit() {
 }
 
 func (a *App) onClose() bool {
-	if a.connected {
+	if a.isConnected() {
 		a.stopStream()
 	}
 
@@ -392,4 +376,42 @@ func (a *App) theme() *giu.StyleSetter {
 		SetColor(giu.StyleColorChildBg, color.RGBA{0, 20, 0, 255})
 
 	return result
+}
+
+func (a *App) connect() {
+	a.mutex.Lock()
+	a.connected = true
+	a.mutex.Unlock()
+
+	a.espManager = espmanager.New(a.ip)
+	a.config.LastIP = a.ipStr
+	a.saveConfig()
+
+	go func() {
+		var err error
+		a.lookupTable, err = a.espManager.GetLookupTable()
+		if err != nil {
+			glg.Errorf("Unable to get ADC Lookup Table: %v", err)
+			a.disconnect(false)
+		}
+	}()
+}
+
+func (a *App) disconnect(safe bool) {
+	if safe {
+		if err := a.espManager.EndConnection(); err != nil {
+			glg.Warn("Unable to properly end ESP connecction: %v", err)
+		}
+	}
+
+	a.mutex.Lock()
+	a.connected = false
+	a.mutex.Unlock()
+}
+
+func (a *App) isConnected() bool {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
+
+	return a.connected
 }
