@@ -209,9 +209,18 @@ func (a *App) mainLayout() {
 			giu.Checkbox("Freez", &a.freez),
 			giu.Tooltip("Freez the plot. (F)"),
 
-			giu.Style().SetFontSize(30).To(
-				giu.Labelf("%.2f", a.average),
-			),
+			giu.Custom(func() {
+				const indicatorW = 70
+				x, _ := giu.GetAvailableRegion()
+				is, _ := giu.GetItemSpacing()
+				giu.Dummy(x-2*is-indicatorW, 0).Build()
+				giu.SameLine()
+				giu.Child().Layout(
+					giu.Style().SetFontSize(35).To(
+						giu.Labelf("%.2f", a.average),
+					),
+				).Size(indicatorW, 55).Build()
+			}),
 		),
 
 		giu.Plot("Scope").Plots(
