@@ -57,6 +57,7 @@ type App struct {
 	sampleRate             int
 	xTicks                 []giu.PlotTicker
 	data                   []float64
+	average                float64
 	minVoltage, maxVoltage float64
 
 	config       *config.Config
@@ -207,6 +208,10 @@ func (a *App) mainLayout() {
 
 			giu.Checkbox("Freez", &a.freez),
 			giu.Tooltip("Freez the plot. (F)"),
+
+			giu.Style().SetFontSize(30).To(
+				giu.Labelf("%.2f", a.average),
+			),
 		),
 
 		giu.Plot("Scope").Plots(
@@ -239,16 +244,10 @@ The Drift voltage is then updated by the average value. The drift voltage is use
 you should see the signal laying on the X axis.
 `).Wrapped(true),
 				giu.Button("Calculate").Size(-1, 0).OnClick(func() {
-					var avg float64
-					data := make([]float64, len(a.data))
-					copy(data, a.data)
+					avg := a.average
+					avg /= a.config.VoltageMultiplyer
 
-					for _, x := range data {
-						avg += x
-					}
-
-					avg /= float64(len(data))
-
+					fmt.Println(a.config.DriftVoltage, avg)
 					a.config.DriftVoltage += avg
 
 					a.saveConfig()
@@ -270,17 +269,7 @@ Connect scope probes to that known voltage, then, enter the value below and pres
 				giu.Row(
 					giu.InputFloat(&a.knownVoltage),
 					giu.Button("Calibrate").OnClick(func() {
-						// take a snapshot of current data table.
-						data := make([]float64, len(a.data))
-						copy(data, a.data)
-
-						// calculate average
-						var avg float64
-						for _, x := range data {
-							avg += x
-						}
-
-						avg /= float64(len(data))
+						avg := a.average
 
 						newVM := float64(a.knownVoltage) / avg
 
