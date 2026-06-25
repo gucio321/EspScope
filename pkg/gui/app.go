@@ -379,7 +379,15 @@ func (a *App) theme() *giu.StyleSetter {
 
 	f := giu.Context.FontAtlas.AddFontFromBytes("MonaSans", assets.Font)
 	result.SetFont(f)
-	result.SetFontSize(20)
+	result.SetFontSize(24)
+	result.
+		SetColor(giu.StyleColorWindowBg, colornames.Black).
+		SetPlotColor(giu.StylePlotColorFrameBg, colornames.Black).
+		SetPlotColor(giu.StylePlotColorPlotBorder, color.RGBA{0, 200, 0, 255}).
+		SetPlotColor(giu.StylePlotColorAxisBgHovered, color.RGBA{0, 100, 0, 255}).
+		SetColor(giu.StyleColorFrameBg, color.RGBA{0, 60, 0, 255}).
+		SetColor(giu.StyleColorButton, color.RGBA{0, 60, 0, 255}).
+		SetColor(giu.StyleColorButtonHovered, color.RGBA{0, 120, 0, 255})
 
 	return result
 }
