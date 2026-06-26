@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AllenDang/cimgui-go/imgui"
 	"github.com/AllenDang/cimgui-go/implot"
 	"github.com/AllenDang/giu"
 	"github.com/dustin/go-humanize"
@@ -237,8 +238,31 @@ func (a *App) mainLayout() {
 				}
 
 				if a.cursorA.Enabled {
-					fmt.Println(a.mouseX)
-					fmt.Println(a.cursorA)
+					x := float64(a.cursorA.Value)
+					implot.PlotScatterdoublePtrdoublePtr("##cursorA", &x, &a.data[a.cursorA.Value], 1)
+					implot.AnnotationStr(x, a.data[a.cursorA.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{10, -10}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorA.Value]))
+					if implot.DragLineX(1, &x, imgui.Vec4{1, 1, 1, 1}) {
+						if x <= 0 {
+							x = 0
+						} else if f := float64(a.sampleRate); x > f {
+							x = f - 1
+						}
+						a.cursorA.SetValue(x)
+					}
+				}
+
+				if a.cursorB.Enabled {
+					x := float64(a.cursorB.Value)
+					implot.PlotScatterdoublePtrdoublePtr("##cursorA", &x, &a.data[a.cursorB.Value], 1)
+					implot.AnnotationStr(x, a.data[a.cursorB.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{10, 10}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorB.Value]))
+					if implot.DragLineX(2, &x, imgui.Vec4{1, 1, 1, 1}) {
+						if x <= 0 {
+							x = 0
+						} else if f := float64(a.sampleRate); x > f {
+							x = f - 1
+						}
+						a.cursorB.SetValue(x)
+					}
 				}
 			}),
 		).YLabel("Voltage [V]").

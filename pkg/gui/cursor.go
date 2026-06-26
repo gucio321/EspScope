@@ -10,6 +10,10 @@ type Cursor struct {
 func (c *Cursor) Toggle(value float64) {
 	c.Enabled = !c.Enabled
 	if c.Enabled {
-		c.Value = int(math.Round(value))
+		c.SetValue(value)
 	}
+}
+
+func (c *Cursor) SetValue(value float64) {
+	c.Value = int(math.Round(value))
 }
