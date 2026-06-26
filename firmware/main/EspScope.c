@@ -22,6 +22,8 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "hal/adc_types.h"
 
+#include "esp_ota_ops.h"
+
 #ifdef CONFIG_AP_NAME
         #define WIFI_SSID       CONFIG_AP_NAME
 #else
@@ -67,6 +69,10 @@ static uint32_t packet_seq = 0;
 #define ADC_MAX 4095
 
 uint16_t adc_lut[ADC_MAX + 1]; // adc lookup table. see table_handler
+
+static esp_ota_handle_t ota_handle = 0;
+static const esp_partition_t *ota_partition = NULL;
+static bool ota_in_progress = false;
 
 typedef struct __attribute__((packed)) {
     uint32_t magic;
@@ -262,9 +268,69 @@ static esp_err_t table_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t ota_upload_handler(httpd_req_t *req)
+{
+    char buf[1024];
+    int received;
+
+    if (!ota_in_progress)
+    {
+        ESP_LOGI(TAG, "Starting OTA update");
+
+        streaming = false;
+        adc_continuous_stop(adc_handle);
+        ESP_LOGI(TAG, "Streaming stopped");
+
+        ota_partition = esp_ota_get_next_update_partition(NULL);
+        if (!ota_partition) {
+            ESP_LOGE(TAG, "No OTA partition found");
+            return ESP_FAIL;
+        }
+
+        ESP_ERROR_CHECK(esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle));
+        ota_in_progress = true;
+    }
+
+    // Stream data from HTTP request
+    while ((received = httpd_req_recv(req, buf, sizeof(buf))) > 0)
+    {
+        esp_err_t err = esp_ota_write(ota_handle, buf, received);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "OTA write failed");
+            esp_ota_abort(ota_handle);
+            ota_in_progress = false;
+            return ESP_FAIL;
+        }
+    }
+
+    // Client closed connection OR finished upload
+    if (received == HTTPD_SOCK_ERR_TIMEOUT) {
+        return ESP_OK;
+    }
+
+    if (received < 0) {
+        ESP_LOGE(TAG, "Receive error");
+        esp_ota_abort(ota_handle);
+        ota_in_progress = false;
+        return ESP_FAIL;
+    }
+
+    // Finalize OTA
+    ESP_ERROR_CHECK(esp_ota_end(ota_handle));
+    ESP_ERROR_CHECK(esp_ota_set_boot_partition(ota_partition));
+
+    ESP_LOGI(TAG, "OTA complete, restarting...");
+
+    ota_in_progress = false;
+
+    esp_restart();
+    return ESP_OK;
+}
+
 static void http_server_start(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.recv_wait_timeout = 10;
     httpd_handle_t server = NULL;
 
     ESP_ERROR_CHECK(httpd_start(&server, &config));
@@ -294,10 +360,18 @@ static void http_server_start(void)
         .user_ctx = NULL
     };
 
+    httpd_uri_t ota_upload_uri = {
+        .uri      = "/ota",
+        .method   = HTTP_POST,
+        .handler  = ota_upload_handler,
+        .user_ctx = NULL
+    };
+
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &root_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &start_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &stop_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &adc_table_uri));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &ota_upload_uri));
 }
 
 static void udp_stream_task(void *arg)
@@ -372,7 +446,10 @@ void app_main(void)
     wifi_init_softap();
     adc_init_fit();
     adc_init_continuous();
+
     http_server_start();
+
+    esp_ota_mark_app_valid_cancel_rollback();
 
     xTaskCreate(
         udp_stream_task,
