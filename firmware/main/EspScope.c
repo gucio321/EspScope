@@ -226,9 +226,10 @@ static esp_err_t root_handler(httpd_req_t *req)
     const char *msg =
         "ESP Scope\n"
         "Use:\n"
-        "  /start?ip=192.168.4.2&port=5000\n"
-        "  /adc_table\n"
-        "  /stop\n";
+        "  /start?ip=IP&port=PORT - start streaming to IP (default: 192.168.4.1) on port PORT (default: 5000)\n"
+        "  /adc_table - ADC calibration data\n"
+        "  /ota - OTA update request\n"
+        "  /stop - Stop streaming\n";
     httpd_resp_sendstr(req, msg);
     return ESP_OK;
 }
@@ -325,7 +326,8 @@ static esp_err_t ota_upload_handler(httpd_req_t *req)
 
     ota_in_progress = false;
 
-    httpd_resp_sendstr(req, "OTA OK, rebooting...");
+    // Kindly say "thank you" to the OTA provider and let it close before rebooting the server.
+    httpd_resp_sendstr(req, "OTA OK, rebooting...\n");
     httpd_resp_send(req, NULL, 0);   // flush
     vTaskDelay(pdMS_TO_TICKS(100));  // allow TCP to send
 
