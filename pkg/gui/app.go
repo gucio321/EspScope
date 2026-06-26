@@ -24,16 +24,17 @@ import (
 )
 
 const (
-	WindowW, WindowH    = 800, 600
-	AppName             = "ESP Scope"
-	GHURL               = "https://github.com/gucio321/EspScope"
-	IPFieldSize         = 100
-	sampleRateFieldSize = 60
-	calibrationPopupID  = "Calibration##" + config.AppID
-	preferencesPopupID  = "Preferences##" + config.AppID
-	ESPSampleRate       = 5e4 // from firmware
-	TimeTick            = 1 / ESPSampleRate
-	nTicks              = 5
+	WindowW, WindowH         = 800, 600
+	AppName                  = "ESP Scope"
+	GHURL                    = "https://github.com/gucio321/EspScope"
+	IPFieldSize              = 100
+	sampleRateFieldSize      = 60
+	calibrationPopupID       = "Calibration##" + config.AppID
+	preferencesPopupID       = "Preferences##" + config.AppID
+	ESPSampleRate            = 5e4 // from firmware
+	TimeTick                 = 1 / ESPSampleRate
+	nTicks                   = 5
+	Delta               rune = '\u0394'
 )
 
 var red = color.RGBA{100, 10, 10, 255}
@@ -240,8 +241,8 @@ func (a *App) mainLayout() {
 				if a.cursorA.Enabled {
 					x := float64(a.cursorA.Value)
 					implot.PlotScatterdoublePtrdoublePtr("##cursorA", &x, &a.data[a.cursorA.Value], 1)
-					implot.AnnotationStr(x, a.data[a.cursorA.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{10, -10}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorA.Value]))
-					if implot.DragLineX(1, &x, imgui.Vec4{1, 1, 1, 1}) {
+					implot.AnnotationStr(x, a.data[a.cursorA.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{5, -15}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorA.Value]))
+					if implot.DragLineX(1, &x, imgui.Vec4{0, 0.7, 0, 1}) {
 						if x <= 0 {
 							x = 0
 						} else if f := float64(a.sampleRate); x > f {
@@ -254,8 +255,8 @@ func (a *App) mainLayout() {
 				if a.cursorB.Enabled {
 					x := float64(a.cursorB.Value)
 					implot.PlotScatterdoublePtrdoublePtr("##cursorA", &x, &a.data[a.cursorB.Value], 1)
-					implot.AnnotationStr(x, a.data[a.cursorB.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{10, 10}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorB.Value]))
-					if implot.DragLineX(2, &x, imgui.Vec4{1, 1, 1, 1}) {
+					implot.AnnotationStr(x, a.data[a.cursorB.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{-5, 15}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorB.Value]))
+					if implot.DragLineX(2, &x, imgui.Vec4{0, 0.7, 0, 1}) {
 						if x <= 0 {
 							x = 0
 						} else if f := float64(a.sampleRate); x > f {
@@ -263,6 +264,26 @@ func (a *App) mainLayout() {
 						}
 						a.cursorB.SetValue(x)
 					}
+				}
+
+				if a.cursorA.Enabled && a.cursorB.Enabled {
+					x1 := a.cursorA.Value
+					y1 := a.data[a.cursorA.Value]
+					x2 := a.cursorB.Value
+					y2 := a.data[a.cursorB.Value]
+
+					dx := x2 - x1
+					dy := y2 - y1
+					implot.AnnotationStr(
+						float64(x1+dx/2), y1+dy/2,
+						imgui.Vec4{0, .2, 0, 1},
+						imgui.Vec2{0, 0}, true,
+						fmt.Sprintf(
+							"(dX: %s , dY: %v)",
+							humanize.SI(float64(dx)*TimeTick, "s"),
+							humanize.SI(a.data[a.cursorB.Value], "V"),
+						),
+					)
 				}
 			}),
 		).YLabel("Voltage [V]").
