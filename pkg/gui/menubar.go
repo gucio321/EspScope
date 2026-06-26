@@ -17,6 +17,9 @@ func (a *App) fileMenu() giu.Widget {
 		giu.MenuItem("Calibrate...").OnClick(func() {
 			giu.OpenPopup(calibrationPopupID)
 		}),
+		giu.MenuItem("Firmware update").OnClick(func() {
+			giu.OpenPopup(otaUpdatePopupID)
+		}),
 		giu.Separator(),
 		giu.MenuItem("Preferences").OnClick(func() {
 			giu.OpenPopup(preferencesPopupID)

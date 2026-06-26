@@ -24,17 +24,17 @@ import (
 )
 
 const (
-	WindowW, WindowH         = 800, 600
-	AppName                  = "ESP Scope"
-	GHURL                    = "https://github.com/gucio321/EspScope"
-	IPFieldSize              = 100
-	sampleRateFieldSize      = 60
-	calibrationPopupID       = "Calibration##" + config.AppID
-	preferencesPopupID       = "Preferences##" + config.AppID
-	ESPSampleRate            = 5e4 // from firmware
-	TimeTick                 = 1 / ESPSampleRate
-	nTicks                   = 5
-	Delta               rune = '\u0394'
+	WindowW, WindowH    = 800, 600
+	AppName             = "ESP Scope"
+	GHURL               = "https://github.com/gucio321/EspScope"
+	IPFieldSize         = 100
+	sampleRateFieldSize = 60
+	calibrationPopupID  = "Calibration##" + config.AppID
+	preferencesPopupID  = "Preferences##" + config.AppID
+	otaUpdatePopupID    = "OTA Firmware Update##" + config.AppID
+	ESPSampleRate       = 5e4 // from firmware
+	TimeTick            = 1 / ESPSampleRate
+	nTicks              = 5
 )
 
 var red = color.RGBA{100, 10, 10, 255}
@@ -71,6 +71,9 @@ type App struct {
 	mouseX  float64
 	cursorA Cursor
 	cursorB Cursor
+
+	otaFile       string
+	otaInProgress bool
 }
 
 func New() *App {
@@ -171,6 +174,7 @@ func (a *App) welcomeScreen() {
 func (a *App) mainLayout() {
 	giu.SingleWindowWithMenuBar().Layout(
 		a.calibrationPopup(),
+		a.otaUpdateDialog(),
 		a.preferencesPopup(),
 		giu.MenuBar().Layout(a.menuBar()),
 		giu.Row(
