@@ -281,7 +281,7 @@ func (a *App) mainLayout() {
 						fmt.Sprintf(
 							"(dX: %s , dY: %v)",
 							humanize.SI(float64(dx)*TimeTick, "s"),
-							humanize.SI(a.data[a.cursorB.Value], "V"),
+							humanize.SI(dy, "V"),
 						),
 					)
 				}
