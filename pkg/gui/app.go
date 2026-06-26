@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AllenDang/cimgui-go/implot"
 	"github.com/AllenDang/giu"
 	"github.com/dustin/go-humanize"
 	"github.com/gucio321/EspScope/pkg/assets"
@@ -64,6 +65,10 @@ type App struct {
 	config       *config.Config
 	knownVoltage float32
 	freez        bool
+
+	mouseX  float64
+	cursorA Cursor
+	cursorB Cursor
 }
 
 func New() *App {
@@ -225,6 +230,17 @@ func (a *App) mainLayout() {
 
 		giu.Plot("Scope").Plots(
 			giu.Line("A0", a.data),
+			giu.Custom(func() {
+				if implot.IsPlotHovered() {
+					mp := implot.GetPlotMousePos()
+					a.mouseX = mp.X
+				}
+
+				if a.cursorA.Enabled {
+					fmt.Println(a.mouseX)
+					fmt.Println(a.cursorA)
+				}
+			}),
 		).YLabel("Voltage [V]").
 			XFlags(giu.PlotAxisFlagsAutoFit).
 			YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
