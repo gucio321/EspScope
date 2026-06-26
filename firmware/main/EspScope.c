@@ -277,9 +277,11 @@ static esp_err_t ota_upload_handler(httpd_req_t *req)
     {
         ESP_LOGI(TAG, "Starting OTA update");
 
-        streaming = false;
-        adc_continuous_stop(adc_handle);
-        ESP_LOGI(TAG, "Streaming stopped");
+        if (streaming) {
+            streaming = false;
+            adc_continuous_stop(adc_handle);
+            ESP_LOGI(TAG, "Streaming stopped due to OTA request");
+        }
 
         ota_partition = esp_ota_get_next_update_partition(NULL);
         if (!ota_partition) {
@@ -322,6 +324,10 @@ static esp_err_t ota_upload_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "OTA complete, restarting...");
 
     ota_in_progress = false;
+
+    httpd_resp_sendstr(req, "OTA OK, rebooting...");
+    httpd_resp_send(req, NULL, 0);   // flush
+    vTaskDelay(pdMS_TO_TICKS(100));  // allow TCP to send
 
     esp_restart();
     return ESP_OK;
