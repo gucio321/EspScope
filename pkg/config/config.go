@@ -10,19 +10,24 @@ import (
 )
 
 const (
-	configFile = "config.json"
-	AppID      = "EspScope" // Used for config
+	configFile        = "config.json"
+	AppID             = "EspScope" // Used for config
+	DefaultSampleRate = 1024
 )
 
 type Config struct {
 	DriftVoltage      float64
 	LastIP            string
 	VoltageMultiplyer float64
+	AutoConnect       bool
+	AutoStream        bool
+	SampleRate        int32
 }
 
 func NewConfig() *Config {
 	return &Config{
 		VoltageMultiplyer: 1,
+		SampleRate:        DefaultSampleRate,
 	}
 }
 
