@@ -4,7 +4,7 @@ import (
 	"github.com/AllenDang/giu"
 	"github.com/kpango/glg"
 	"github.com/pkg/browser"
-	"github.com/sqweek/dialog"
+	"github.com/wizzymore/tinyfiledialogs"
 )
 
 const idfURL = "https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html"
@@ -43,12 +43,14 @@ To perform the firmware update follow those steps:
 				giu.Row(
 					giu.InputText(&a.otaFile),
 					giu.Button("...").OnClick(func() {
-						filepath, err := dialog.File().Filter("Firmware file", "bin").SetStartDir(".").Load()
-						if err != nil {
-							glg.Errorf("Unable to load file path: %v", err)
-						}
+						go func() {
+							filepath, ok := tinyfiledialogs.OpenFileDialog("Select Firmware File", ".", []string{"*.bin"}, "Firmware file (.bin)", false)
+							if !ok {
+								glg.Warn("File not selected or error happened.v")
+							}
 
-						a.otaFile = filepath
+							a.otaFile = filepath
+						}()
 					}),
 				),
 				giu.Condition(
