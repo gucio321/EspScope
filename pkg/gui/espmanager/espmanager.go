@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/kpango/glg"
 )
@@ -23,7 +24,12 @@ func New(ip net.IP) *ESPManager {
 
 func (m *ESPManager) StartStream() error {
 	url := fmt.Sprintf("http://%s/start", m.ip)
-	resp, err := http.Get(url)
+
+	client := &http.Client{
+		Timeout: time.Millisecond * 500,
+	}
+
+	resp, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("unable to access %s: %v", url, err)
 	}
@@ -39,7 +45,12 @@ func (m *ESPManager) StartStream() error {
 
 func (m *ESPManager) StopStream() error {
 	url := fmt.Sprintf("http://%s/stop", m.ip)
-	resp, err := http.Get(url)
+
+	client := &http.Client{
+		Timeout: time.Millisecond * 500,
+	}
+
+	resp, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("unable to access %s: %v", url, err)
 	}
