@@ -489,6 +489,6 @@ func (a *App) isConnected() bool {
 
 func (a *App) startStream() {
 	if err := a.espManager.StartStream(); err != nil {
-		glg.Error("Unable to start stream: %v", err)
+		glg.Errorf("Unable to start stream: %v", err)
 	}
 }
