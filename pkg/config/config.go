@@ -22,12 +22,14 @@ type Config struct {
 	AutoConnect       bool
 	AutoStream        bool
 	SampleRate        int32
+	PosOnCrosshairs   bool
 }
 
 func NewConfig() *Config {
 	return &Config{
 		VoltageMultiplyer: 1,
 		SampleRate:        DefaultSampleRate,
+		PosOnCrosshairs:   true,
 	}
 }
 

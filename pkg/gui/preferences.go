@@ -14,6 +14,8 @@ func (a *App) preferencesPopup() giu.Widget {
 			}).Size(sampleRateFieldSize),
 		),
 		giu.Separator(),
+		giu.Checkbox("Show current value on plot", &a.config.PosOnCrosshairs),
+		giu.Separator(),
 		giu.Align(giu.AlignRight).To(
 			giu.Button("Ok").OnClick(func() {
 				a.saveConfig()
