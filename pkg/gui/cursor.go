@@ -8,7 +8,7 @@ type Cursor struct {
 }
 
 func (c *Cursor) Toggle(value float64) {
-	if c.Enabled && c.Value == c.floatToInt(value) {
+	if c.Enabled && c.Value == floatToInt(value) {
 		c.Enabled = false
 
 		return
@@ -19,9 +19,9 @@ func (c *Cursor) Toggle(value float64) {
 }
 
 func (c *Cursor) SetValue(value float64) {
-	c.Value = c.floatToInt(value)
+	c.Value = floatToInt(value)
 }
 
-func (c *Cursor) floatToInt(v float64) int {
+func floatToInt(v float64) int {
 	return int(math.Round(v))
 }

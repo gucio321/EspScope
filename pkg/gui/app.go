@@ -240,6 +240,7 @@ func (a *App) mainLayout() {
 				if implot.IsPlotHovered() {
 					mp := implot.GetPlotMousePos()
 					a.mouseX = mp.X
+					implot.AnnotationStr(mp.X, mp.Y, imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{5, -5}, true, fmt.Sprintf("(X: %s , Y: %s)", humanize.SIWithDigits(mp.X*TimeTick, 3, "s"), humanize.SIWithDigits(a.data[floatToInt(mp.X)], 3, "V")))
 				}
 
 				if a.cursorA.Enabled {
