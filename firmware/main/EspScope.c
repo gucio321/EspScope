@@ -51,7 +51,7 @@
 #define ADC_ATTEN       ADC_ATTEN_DB_12
 #define ADC_BIT_WIDTH   SOC_ADC_DIGI_MAX_BITWIDTH
 
-#define SAMPLE_RATE_HZ  50000           // start conservative
+#define DEFAULT_SAMPLE_RATE_HZ  50000           // start conservative
 #define ADC_FRAME_BYTES 1024
 #define UDP_SAMPLES     512
 
@@ -59,9 +59,10 @@
 
 static const char *TAG = "esp_scope";
 
+static uint32_t sample_rate_hz = DEFAULT_SAMPLE_RATE_HZ;
 static adc_cali_handle_t cali_handle;
-
 static adc_continuous_handle_t adc_handle;
+
 static volatile bool streaming = false;
 
 static int udp_sock = -1;
@@ -153,7 +154,7 @@ static void wifi_init_softap(void)
              WIFI_SSID, WIFI_PASS);
 }
 
-static void adc_init_continuous(void)
+static void adc_init_continuous(uint32_t new_sample_rate_hz)
 {
     adc_continuous_handle_cfg_t adc_config = {
         .max_store_buf_size = 4096,
@@ -170,12 +171,14 @@ static void adc_init_continuous(void)
     };
 
     adc_continuous_config_t dig_cfg = {
-        .sample_freq_hz = SAMPLE_RATE_HZ,
+        .sample_freq_hz = new_sample_rate_hz,
         .conv_mode = ADC_CONV_SINGLE_UNIT_1,
         .format = ADC_DIGI_OUTPUT_FORMAT_TYPE2,
         .pattern_num = 1,
         .adc_pattern = &adc_pattern,
     };
+
+    sample_rate_hz = new_sample_rate_hz;
 
     ESP_ERROR_CHECK(adc_continuous_config(adc_handle, &dig_cfg));
 }
@@ -447,7 +450,7 @@ static void udp_stream_task(void *arg)
 
         pkt.magic = MAGIC;
         pkt.seq = packet_seq++;
-        pkt.sample_rate = SAMPLE_RATE_HZ;
+        pkt.sample_rate = sample_rate_hz;
         pkt.sample_count = 0;
 
         for (int i = 0;
@@ -492,7 +495,7 @@ void app_main(void)
 
     wifi_init_softap();
     adc_init_fit();
-    adc_init_continuous();
+    adc_init_continuous(DEFAULT_SAMPLE_RATE_HZ);
 
     http_server_start();
 
