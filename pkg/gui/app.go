@@ -239,7 +239,9 @@ func (a *App) mainLayout() {
 		),
 
 		giu.Plot("Scope").Plots(
-			giu.Line("A0", a.data),
+			giu.Line("A0", a.data).
+				SetProperty(giu.PlotPropertyLineColor, (a.config.LineColor)).
+				SetProperty(giu.PlotPropertyLineWeight, int(a.config.LineThickness)),
 			giu.Custom(func() {
 				if implot.IsPlotHovered() {
 					mp := implot.GetPlotMousePos()

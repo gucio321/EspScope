@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"os"
 	"path/filepath"
 
@@ -23,6 +24,8 @@ type Config struct {
 	AutoStream        bool
 	SampleRate        int32
 	PosOnCrosshairs   bool
+	LineThickness     int32
+	LineColor         color.RGBA
 }
 
 func NewConfig() *Config {
@@ -30,6 +33,8 @@ func NewConfig() *Config {
 		VoltageMultiplyer: 1,
 		SampleRate:        DefaultSampleRate,
 		PosOnCrosshairs:   true,
+		LineThickness:     2,
+		LineColor:         color.RGBA{R: 255, G: 0, B: 0, A: 255},
 	}
 }
 
