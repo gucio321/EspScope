@@ -21,7 +21,7 @@ func (a *App) preferencesPopup() giu.Widget {
 		),
 		giu.Row(
 			giu.Label("Line color:"),
-			giu.ColorEdit("##lineColor", &a.config.LineColor).Size(giu.Auto), // TODO: the placeholder label can be removed: see https://github.com/AllenDang/giu/pull/1077
+			giu.ColorEdit(&a.config.LineColor).Size(giu.Auto),
 		),
 		giu.Separator(),
 		giu.Align(giu.AlignRight).To(

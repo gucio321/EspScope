@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	github.com/AllenDang/cimgui-go v1.5.0
-	github.com/AllenDang/giu v0.15.1-0.20260709104649-bf4e5e9adafb
+	github.com/AllenDang/giu v0.15.1-0.20260709194539-412fa0b7e045
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gucio321/giu-animations/v2 v2.3.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
