@@ -175,6 +175,16 @@ func (a *App) welcomeScreen() {
 }
 
 func (a *App) mainLayout() {
+	if giu.IsKeyDown(giu.KeyLeftControl) {
+		const samplesPerFrameMultiplier = 10
+		scrollDelta := imgui.CurrentIO().MouseWheel()
+		a.config.SamplesPerFrame += int32(scrollDelta * samplesPerFrameMultiplier)
+		if a.config.SamplesPerFrame < 10 {
+			a.config.SamplesPerFrame = 10
+		}
+		a.setSamplesPerFrame(int(a.config.SamplesPerFrame))
+	}
+
 	giu.SingleWindowWithMenuBar().Layout(
 		a.calibrationPopup(),
 		a.otaUpdateDialog(),
@@ -222,8 +232,10 @@ func (a *App) mainLayout() {
 
 			giu.Checkbox("Freez", &a.freez),
 			giu.Tooltip("Freez the plot. (F)"),
+			giu.DragInt(&a.config.SamplesPerFrame).
+				Size(60),
 
-			giu.Custom(func() {
+			giu.Custom(func() { // Average voltage indicator
 				const indicatorW = 70
 				x, _ := giu.GetAvailableRegion()
 				is, _ := giu.GetItemSpacing()
