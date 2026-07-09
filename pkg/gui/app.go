@@ -303,7 +303,7 @@ func (a *App) mainLayout() {
 			}),
 		).YLabel("Voltage [V]").
 			XFlags(giu.PlotAxisFlagsAutoFit).
-			YLimits(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
+			YLim(a.minVoltage, a.maxVoltage, giu.ConditionOnce).
 			Size(-1, -1).
 			XTicks(a.xTicks, false).
 			XLabel("Time [s]").
