@@ -185,6 +185,11 @@ static void adc_init_continuous(uint32_t new_sample_rate_hz)
 
 static esp_err_t start_handler(httpd_req_t *req)
 {
+    if (ota_in_progress) {
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        return httpd_resp_sendstr(req, "OTA update in progress!\n");
+    }
+    
     char query[128] = {0};
     char ip_str[32] = "192.168.4.2";
     char port_str[16] = "5000";
@@ -221,6 +226,11 @@ static esp_err_t start_handler(httpd_req_t *req)
 
 static esp_err_t stop_handler(httpd_req_t *req)
 {
+    if (ota_in_progress) {
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        return httpd_resp_sendstr(req, "OTA update in progress!\n");
+    }
+
     streaming = false;
     adc_continuous_stop(adc_handle);
 
@@ -239,12 +249,24 @@ static esp_err_t root_handler(httpd_req_t *req)
         "  /ota - OTA update request\n"
         "  /version - Get firmware version\n"
         "  /stop - Stop streaming\n";
+
     httpd_resp_sendstr(req, msg);
+
+    if (ota_in_progress) {
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        return httpd_resp_sendstr(req, "OTA update in progress!\n");
+    }
+
     return ESP_OK;
 }
 
 static esp_err_t table_handler(httpd_req_t *req)
 {
+    if (ota_in_progress) {
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        return httpd_resp_sendstr(req, "OTA update in progress!\n");
+    }
+
     const size_t table_size_bytes = sizeof(adc_lut);
 
     httpd_resp_set_type(req, "application/octet-stream");
@@ -346,6 +368,11 @@ static esp_err_t ota_upload_handler(httpd_req_t *req)
 
 static esp_err_t version_handler(httpd_req_t *req)
 {
+    if (ota_in_progress) {
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        return httpd_resp_sendstr(req, "OTA update in progress!\n");
+    }
+
     const esp_app_desc_t *app = esp_app_get_description();
 
     char msg[256];
