@@ -410,6 +410,7 @@ func (a *App) connect() {
 	go func() {
 		if err := a.checkVersion(); err != nil {
 			glg.Errorf("ESP firmware version check failed. Check your WiFi connection. If the API supports OTA updates, go to File->Firmware Update and follow instructions. Got error: %v", err)
+			a.disconnect(false)
 		}
 
 		var err error
