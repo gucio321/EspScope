@@ -2,16 +2,16 @@ package gui
 
 func (a *App) scopeUpdater() {
 	for {
-		newData := make([]float64, a.sampleRate)
+		newData := make([]float64, a.samplesPerFrame)
 		avg := float64(0)
-		for i := range a.sampleRate {
+		for i := range a.samplesPerFrame {
 			newData[i] = a.ADCToVoltage(<-a.listener.data)
 			avg += newData[i]
 		}
 
 		if !a.freez {
 			copy(a.data, newData)
-			a.average = avg / float64(a.sampleRate)
+			a.average = avg / float64(a.samplesPerFrame)
 		}
 	}
 }

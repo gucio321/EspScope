@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	configFile        = "config.json"
-	AppID             = "EspScope" // Used for config
-	DefaultSampleRate = 1024
+	configFile             = "config.json"
+	AppID                  = "EspScope" // Used for config
+	DefaultSamplesPerFrame = 1024
 )
 
 type Config struct {
@@ -22,7 +22,7 @@ type Config struct {
 	VoltageMultiplyer float64
 	AutoConnect       bool
 	AutoStream        bool
-	SampleRate        int32
+	SamplesPerFrame   int32
 	PosOnCrosshairs   bool
 	LineThickness     int32
 	LineColor         color.RGBA
@@ -31,7 +31,7 @@ type Config struct {
 func NewConfig() *Config {
 	return &Config{
 		VoltageMultiplyer: 1,
-		SampleRate:        DefaultSampleRate,
+		SamplesPerFrame:   DefaultSamplesPerFrame,
 		PosOnCrosshairs:   true,
 		LineThickness:     2,
 		LineColor:         color.RGBA{R: 255, G: 0, B: 0, A: 255},

@@ -61,7 +61,7 @@ type App struct {
 	espManager  *espmanager.ESPManager
 	lookupTable *espmanager.LookupTable
 
-	sampleRate             int
+	samplesPerFrame        int
 	xTicks                 []giu.PlotTicker
 	data                   []float64
 	average                float64
@@ -88,7 +88,7 @@ func New() *App {
 		lookupTable: espmanager.NewLookupTable(),
 	}
 
-	result.setSampleRate(config.DefaultSampleRate)
+	result.setSamplesPerFrame(config.DefaultSamplesPerFrame)
 
 	result.listener.end = make(chan bool)
 	result.listener.data = make(chan uint16, 1024)
@@ -244,7 +244,7 @@ func (a *App) mainLayout() {
 			giu.Custom(func() {
 				if implot.IsPlotHovered() {
 					mp := implot.GetPlotMousePos()
-					if mp.X < 0 || mp.X > float64(a.sampleRate) {
+					if mp.X < 0 || mp.X > float64(a.samplesPerFrame) {
 						return
 					}
 
@@ -261,7 +261,7 @@ func (a *App) mainLayout() {
 					if implot.DragLineX(1, &x, imgui.Vec4{0, 0.7, 0, 1}) {
 						if x <= 0 {
 							x = 0
-						} else if f := float64(a.sampleRate); x > f {
+						} else if f := float64(a.samplesPerFrame); x > f {
 							x = f - 1
 						}
 						a.cursorA.SetValue(x)
@@ -275,7 +275,7 @@ func (a *App) mainLayout() {
 					if implot.DragLineX(2, &x, imgui.Vec4{0, 0.7, 0, 1}) {
 						if x <= 0 {
 							x = 0
-						} else if f := float64(a.sampleRate); x > f {
+						} else if f := float64(a.samplesPerFrame); x > f {
 							x = f - 1
 						}
 						a.cursorB.SetValue(x)
@@ -312,8 +312,8 @@ func (a *App) mainLayout() {
 	)
 }
 
-func (a *App) setSampleRate(sr int) {
-	a.sampleRate = sr
+func (a *App) setSamplesPerFrame(sr int) {
+	a.samplesPerFrame = sr
 	a.data = make([]float64, sr)
 	a.updatePlotTicks()
 }
@@ -334,8 +334,8 @@ func (a *App) updatePlotTicks() {
 	a.xTicks = make([]giu.PlotTicker, nTicks+1)
 	for i := range nTicks + 1 {
 		a.xTicks[i] = giu.PlotTicker{
-			Position: float64(i) * float64(a.sampleRate) / nTicks,
-			Label:    humanize.SI(float64(i)*TimeTick*float64(a.sampleRate)/nTicks, "s"),
+			Position: float64(i) * float64(a.samplesPerFrame) / nTicks,
+			Label:    humanize.SI(float64(i)*TimeTick*float64(a.samplesPerFrame)/nTicks, "s"),
 		}
 	}
 }

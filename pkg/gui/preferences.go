@@ -8,9 +8,9 @@ func (a *App) preferencesPopup() giu.Widget {
 		giu.Checkbox("Auto-stream on connect", &a.config.AutoStream),
 		giu.Tooltip("Automatically request streaming when connecting to the EspScope server"),
 		giu.Row(
-			giu.Label("Sample Rate: "),
-			giu.InputInt(&a.config.SampleRate).OnChange(func() {
-				a.setSampleRate(int(a.config.SampleRate))
+			giu.Label("Samples per frame: "),
+			giu.InputInt(&a.config.SamplesPerFrame).OnChange(func() {
+				a.setSamplesPerFrame(int(a.config.SamplesPerFrame))
 			}).Size(sampleRateFieldSize),
 		),
 		giu.Separator(),
