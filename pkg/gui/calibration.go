@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/AllenDang/giu"
+	"github.com/gucio321/EspScope/pkg/config"
 	"github.com/kpango/glg"
 )
 
 const (
 	calibrationChildW, calibrationChildH = 500, 400
+	calibrationPopupID                   = "Calibration##" + config.AppID
 )
 
 func (a *App) calibrationPopup() giu.Widget {

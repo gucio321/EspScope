@@ -33,7 +33,6 @@ const (
 	GHURL               = "https://github.com/gucio321/EspScope"
 	IPFieldSize         = 100
 	sampleRateFieldSize = 60
-	calibrationPopupID  = "Calibration##" + config.AppID
 	preferencesPopupID  = "Preferences##" + config.AppID
 	otaUpdatePopupID    = "OTA Firmware Update##" + config.AppID
 	ESPSampleRate       = 5e4 // from firmware
