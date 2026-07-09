@@ -1,3 +1,6 @@
+#define API_VERSION_MAJOR 1
+#define API_VERSION_MINOR 0
+
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
@@ -21,6 +24,8 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 #include "hal/adc_types.h"
+
+#include "esp_app_desc.h"
 
 #include "esp_ota_ops.h"
 
@@ -229,6 +234,7 @@ static esp_err_t root_handler(httpd_req_t *req)
         "  /start?ip=IP&port=PORT - start streaming to IP (default: 192.168.4.1) on port PORT (default: 5000)\n"
         "  /adc_table - ADC calibration data\n"
         "  /ota - OTA update request\n"
+        "  /version - Get firmware version\n"
         "  /stop - Stop streaming\n";
     httpd_resp_sendstr(req, msg);
     return ESP_OK;
@@ -335,6 +341,31 @@ static esp_err_t ota_upload_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t version_handler(httpd_req_t *req)
+{
+    const esp_app_desc_t *app = esp_app_get_description();
+
+    char msg[256];
+
+    snprintf(msg, sizeof(msg),
+         "{\n"
+         "\t\"ProjectName\": \"%s\",\n"
+         "\t\"CommitID\": \"%s\",\n"
+         "\t\"BuildDate\": \"%s %s\",\n"
+         "\t\"APIVersionMajor\": %d,\n"
+         "\t\"APIVersionMinor\": %d\n"
+         "}\n",
+         app->project_name,
+         app->version,
+         app->date,
+         app->time,
+         API_VERSION_MAJOR,
+         API_VERSION_MINOR);
+
+    httpd_resp_sendstr(req, msg);
+    return ESP_OK;
+}
+
 static void http_server_start(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -375,11 +406,19 @@ static void http_server_start(void)
         .user_ctx = NULL
     };
 
+    httpd_uri_t version_uri = {
+        .uri      = "/version",
+        .method   = HTTP_GET,
+        .handler  = version_handler,
+        .user_ctx = NULL
+    };
+
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &root_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &start_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &stop_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &adc_table_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &ota_upload_uri));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &version_uri));
 }
 
 static void udp_stream_task(void *arg)
