@@ -5,14 +5,17 @@ import (
 	"github.com/pkg/browser"
 )
 
+const frequencyPopupID = "FrequencyPopup"
+
 func (a *App) menuBar() giu.Widget {
 	return giu.Layout{
-		giu.Menu("File").Layout(a.fileMenu()),
+		giu.Menu("App").Layout(a.appMenu()),
+		giu.Menu("Device").Layout(a.deviceMenu()),
 		giu.Menu("Help").Layout(a.helpMenu()),
 	}
 }
 
-func (a *App) fileMenu() giu.Widget {
+func (a *App) appMenu() giu.Widget {
 	return giu.Layout{
 		giu.MenuItem("Calibrate...").OnClick(func() {
 			giu.OpenPopup(calibrationPopupID)
@@ -29,10 +32,19 @@ func (a *App) fileMenu() giu.Widget {
 	}
 }
 
+func (a *App) deviceMenu() giu.Widget {
+	return giu.Layout{
+		giu.MenuItem("Set Frequency...").OnClick(func() {
+			giu.OpenPopup(frequencyPopupID)
+		}).Enabled(a.connected),
+	}
+}
+
 func (a *App) helpMenu() giu.Widget {
 	return giu.Layout{
 		giu.MenuItem("GitHub").OnClick(func() {
 			browser.OpenURL(GHURL)
+			giu.CloseCurrentPopup()
 		}),
 	}
 }

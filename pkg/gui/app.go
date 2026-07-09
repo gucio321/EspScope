@@ -188,6 +188,7 @@ func (a *App) mainLayout() {
 	giu.SingleWindowWithMenuBar().Layout(
 		a.calibrationPopup(),
 		a.otaUpdateDialog(),
+		a.frequencyPopup(),
 		a.preferencesPopup(),
 		giu.MenuBar().Layout(a.menuBar()),
 		giu.Row(
@@ -465,5 +466,18 @@ func (a *App) isConnected() bool {
 func (a *App) startStream() {
 	if err := a.espManager.StartStream(); err != nil {
 		glg.Errorf("Unable to start stream: %v", err)
+	}
+}
+
+func (a *App) frequencyPopup() giu.Widget {
+	return giu.Popup(frequencyPopupID).Layout(
+		giu.SliderInt(&a.config.Frequency, config.MinFrequency, config.MaxFrequency),
+		giu.Button("Set").OnClick(a.updateFrequency).Size(giu.Auto, 0),
+	)
+}
+
+func (a *App) updateFrequency() {
+	if err := a.espManager.SetFrequency(int(a.config.Frequency)); err != nil {
+		glg.Errorf("Unable to set frequency: %v", err)
 	}
 }

@@ -64,6 +64,27 @@ func (m *ESPManager) StopStream() error {
 	return nil
 }
 
+func (m *ESPManager) SetFrequency(freq int) error {
+	url := fmt.Sprintf("http://%s/sample_rate?set=%d", m.ip, freq)
+
+	client := &http.Client{
+		Timeout: time.Millisecond * 500,
+	}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("unable to access %s: %v", url, err)
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("invalid response for URL %s (expected http status 200, but got %d): %v", url, resp.StatusCode, ErrInvalidResponse)
+	}
+
+	glg.Debug("Sample rate updated.")
+
+	return nil
+}
+
 func (m *ESPManager) EndConnection() error {
 	return m.StopStream()
 }

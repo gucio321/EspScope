@@ -14,6 +14,9 @@ const (
 	configFile             = "config.json"
 	AppID                  = "EspScope" // Used for config
 	DefaultSamplesPerFrame = 1024
+	DefaultFrequency       = 50000
+	MinFrequency           = 0
+	MaxFrequency           = 100000
 )
 
 type Config struct {
@@ -26,6 +29,7 @@ type Config struct {
 	PosOnCrosshairs   bool
 	LineThickness     int32
 	LineColor         color.RGBA
+	Frequency         int32
 }
 
 func NewConfig() *Config {
@@ -35,6 +39,7 @@ func NewConfig() *Config {
 		PosOnCrosshairs:   true,
 		LineThickness:     2,
 		LineColor:         color.RGBA{R: 255, G: 0, B: 0, A: 255},
+		Frequency:         DefaultFrequency,
 	}
 }
 
