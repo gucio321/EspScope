@@ -458,6 +458,7 @@ func (a *App) connect() {
 	a.saveConfig()
 
 	go func() {
+		a.checkVersion()
 		var err error
 		a.lookupTable, err = a.espManager.GetLookupTable()
 		if err != nil {
@@ -469,6 +470,13 @@ func (a *App) connect() {
 			a.startStream()
 		}
 	}()
+}
+
+func (a *App) checkVersion() {
+	_, err := a.espManager.Version()
+	if err != nil {
+		glg.Errorf("Unable to get ESP firmware version: %v", err)
+	}
 }
 
 func (a *App) disconnect(safe bool) {
