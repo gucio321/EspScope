@@ -428,10 +428,14 @@ static esp_err_t sample_rate_handler(httpd_req_t *req)
 
     if (new_sample_rate <= SOC_ADC_SAMPLE_FREQ_THRES_LOW) {
         httpd_resp_set_status(req, "400 Bad Request");
-        return httpd_resp_sendstr(req, "{\"Message\":\"Invalid sample rate. Must be more than SOC_ADC_SAMPLE_FREQ_THRES_HIGH.\"}\n");
+        char msg[256];
+        sprintf(msg, "{\"Message\":\"Invalid sample rate. Must be more than %d.\"}\n", SOC_ADC_SAMPLE_FREQ_THRES_LOW);
+        return httpd_resp_sendstr(req, msg);
     } else if (new_sample_rate > ABSOLUTE_MAX_SAMPLE_RATE_HZ) {
         httpd_resp_set_status(req, "400 Bad Request");
-        return httpd_resp_sendstr(req, "{\"Message\":\"Invalid sample rate. Must be less than ABSOLUTE_MAX_SAMPLE_RATE_HZ (see firmware).\"}\n");
+        char msg[256];
+        sprintf(msg, "{\"Message\":\"Invalid sample rate. Must be less than %d.\"}\n", ABSOLUTE_MAX_SAMPLE_RATE_HZ);
+        return httpd_resp_sendstr(req, msg);
     } else if (streaming) {
         httpd_resp_set_status(req, "400 Bad Request");
         return httpd_resp_sendstr(req, "{\"Message\":\"Cannot change sample rate while streaming.\"}\n");
