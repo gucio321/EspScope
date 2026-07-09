@@ -4,14 +4,14 @@ go 1.26.3
 
 require (
 	github.com/AllenDang/cimgui-go v1.5.0
-	github.com/AllenDang/giu v0.15.1-0.20260622231810-14461adec47b
+	github.com/AllenDang/giu v0.15.1-0.20260709104649-bf4e5e9adafb
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gucio321/giu-animations/v2 v2.3.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/kpango/glg v1.6.15
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/wizzymore/tinyfiledialogs v1.0.2
-	golang.org/x/image v0.43.0
+	golang.org/x/image v0.44.0
 )
 
 require (
@@ -25,6 +25,6 @@ require (
 	github.com/sahilm/fuzzy v0.1.3 // indirect
 	golang.design/x/hotkey v0.6.1 // indirect
 	golang.design/x/mainthread v0.3.1 // indirect
-	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	gopkg.in/eapache/queue.v1 v1.1.0 // indirect
 )
