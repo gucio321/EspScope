@@ -35,8 +35,6 @@ const (
 	sampleRateFieldSize = 60
 	preferencesPopupID  = "Preferences##" + config.AppID
 	otaUpdatePopupID    = "OTA Firmware Update##" + config.AppID
-	ESPSampleRate       = 5e4 // from firmware
-	TimeTick            = 1 / ESPSampleRate
 	nTicks              = 5
 )
 
@@ -263,14 +261,14 @@ func (a *App) mainLayout() {
 
 					a.mouseX = mp.X
 					if a.config.PosOnCrosshairs {
-						implot.AnnotationStr(mp.X, mp.Y, imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{5, -5}, true, fmt.Sprintf("(X: %s , Y: %s)", humanize.SIWithDigits(mp.X*TimeTick, 3, "s"), humanize.SIWithDigits(a.data[floatToInt(mp.X)], 3, "V")))
+						implot.AnnotationStr(mp.X, mp.Y, imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{5, -5}, true, fmt.Sprintf("(X: %s , Y: %s)", humanize.SIWithDigits(mp.X*a.timeTick(), 3, "s"), humanize.SIWithDigits(a.data[floatToInt(mp.X)], 3, "V")))
 					}
 				}
 
 				if a.cursorA.Enabled {
 					x := float64(a.cursorA.Value)
 					implot.PlotScatterdoublePtrdoublePtr("##cursorA", &x, &a.data[a.cursorA.Value], 1)
-					implot.AnnotationStr(x, a.data[a.cursorA.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{5, -15}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorA.Value]))
+					implot.AnnotationStr(x, a.data[a.cursorA.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{5, -15}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*a.timeTick(), "s"), a.data[a.cursorA.Value]))
 					if implot.DragLineX(1, &x, imgui.Vec4{0, 0.7, 0, 1}) {
 						if x <= 0 {
 							x = 0
@@ -284,7 +282,7 @@ func (a *App) mainLayout() {
 				if a.cursorB.Enabled {
 					x := float64(a.cursorB.Value)
 					implot.PlotScatterdoublePtrdoublePtr("##cursorA", &x, &a.data[a.cursorB.Value], 1)
-					implot.AnnotationStr(x, a.data[a.cursorB.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{-5, 15}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*TimeTick, "s"), a.data[a.cursorB.Value]))
+					implot.AnnotationStr(x, a.data[a.cursorB.Value], imgui.Vec4{0, .2, 0, 1}, imgui.Vec2{-5, 15}, true, fmt.Sprintf("(X: %s , Y: %.2f)", humanize.SI(x*a.timeTick(), "s"), a.data[a.cursorB.Value]))
 					if implot.DragLineX(2, &x, imgui.Vec4{0, 0.7, 0, 1}) {
 						if x <= 0 {
 							x = 0
@@ -309,7 +307,7 @@ func (a *App) mainLayout() {
 						imgui.Vec2{0, 0}, true,
 						fmt.Sprintf(
 							"(dX: %s , dY: %v)",
-							humanize.SI(float64(dx)*TimeTick, "s"),
+							humanize.SI(float64(dx)*a.timeTick(), "s"),
 							humanize.SI(dy, "V"),
 						),
 					)
@@ -348,7 +346,7 @@ func (a *App) updatePlotTicks() {
 	for i := range nTicks + 1 {
 		a.xTicks[i] = giu.PlotTicker{
 			Position: float64(i) * float64(a.samplesPerFrame) / nTicks,
-			Label:    humanize.SI(float64(i)*TimeTick*float64(a.samplesPerFrame)/nTicks, "s"),
+			Label:    humanize.SI(float64(i)*a.timeTick()*float64(a.samplesPerFrame)/nTicks, "s"),
 		}
 	}
 }
@@ -473,7 +471,11 @@ func (a *App) startStream() {
 func (a *App) frequencyPopup() giu.Widget {
 	return giu.Popup(frequencyPopupID).Layout(
 		giu.SliderInt(&a.config.Frequency, config.MinFrequency, config.MaxFrequency),
-		giu.Button("Set").OnClick(a.updateFrequency).Size(giu.Auto, 0),
+		giu.Button("Set").OnClick(func() {
+			a.updateFrequency()
+			a.saveConfig()
+			giu.CloseCurrentPopup()
+		}).Size(giu.Auto, 0),
 	)
 }
 
@@ -481,4 +483,9 @@ func (a *App) updateFrequency() {
 	if err := a.espManager.SetFrequency(int(a.config.Frequency)); err != nil {
 		glg.Errorf("Unable to set frequency: %v", err)
 	}
+}
+
+// timeTick returns a single sample duration based on config frequency.
+func (a *App) timeTick() float64 {
+	return 1. / float64(a.config.Frequency)
 }
