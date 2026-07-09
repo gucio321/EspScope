@@ -1,8 +1,10 @@
 package espmanager
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -76,13 +78,29 @@ func (m *ESPManager) SetFrequency(freq int) error {
 		return fmt.Errorf("unable to access %s: %v", url, err)
 	}
 
-	if resp.StatusCode != 200 {
+	switch resp.StatusCode {
+	case 200:
+		glg.Debug("Sample rate updated.")
+		return nil
+	case 400: // Bad request
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("bad request received while trying access %s but unable to read response %v", url, err)
+		}
+
+		var msg struct {
+			Message string
+		}
+
+		if err := json.Unmarshal(body, &msg); err != nil {
+			return fmt.Errorf("bad request received while trying access %s but unable to parse error message %v", url, err)
+		}
+
+		return fmt.Errorf("bad request: %v", msg.Message)
+	default:
 		return fmt.Errorf("invalid response for URL %s (expected http status 200, but got %d): %v", url, resp.StatusCode, ErrInvalidResponse)
 	}
-
-	glg.Debug("Sample rate updated.")
-
-	return nil
 }
 
 func (m *ESPManager) EndConnection() error {
