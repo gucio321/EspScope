@@ -1,5 +1,5 @@
 #define API_VERSION_MAJOR 1
-#define API_VERSION_MINOR 0
+#define API_VERSION_MINOR 1
 
 #include <string.h>
 #include <stdio.h>
@@ -52,6 +52,7 @@
 #define ADC_BIT_WIDTH   SOC_ADC_DIGI_MAX_BITWIDTH
 
 #define DEFAULT_SAMPLE_RATE_HZ  50000           // start conservative
+#define ABSOLUTE_MAX_SAMPLE_RATE_HZ SOC_ADC_SAMPLE_FREQ_THRES_HIGH
 #define ADC_FRAME_BYTES 1024
 #define UDP_SAMPLES     512
 
@@ -154,15 +155,7 @@ static void wifi_init_softap(void)
              WIFI_SSID, WIFI_PASS);
 }
 
-static void adc_init_continuous(uint32_t new_sample_rate_hz)
-{
-    adc_continuous_handle_cfg_t adc_config = {
-        .max_store_buf_size = 4096,
-        .conv_frame_size = ADC_FRAME_BYTES,
-    };
-
-    ESP_ERROR_CHECK(adc_continuous_new_handle(&adc_config, &adc_handle));
-
+static void adc_reconfigure_continuous(uint32_t new_sample_rate_hz) {
     adc_digi_pattern_config_t adc_pattern = {
         .atten = ADC_ATTEN,
         .channel = ADC_CHANNEL,
@@ -181,6 +174,18 @@ static void adc_init_continuous(uint32_t new_sample_rate_hz)
     sample_rate_hz = new_sample_rate_hz;
 
     ESP_ERROR_CHECK(adc_continuous_config(adc_handle, &dig_cfg));
+}
+
+static void adc_init_continuous(void)
+{
+    adc_continuous_handle_cfg_t adc_config = {
+        .max_store_buf_size = 4096,
+        .conv_frame_size = ADC_FRAME_BYTES,
+    };
+
+    ESP_ERROR_CHECK(adc_continuous_new_handle(&adc_config, &adc_handle));
+
+    adc_reconfigure_continuous(DEFAULT_SAMPLE_RATE_HZ);
 }
 
 static esp_err_t start_handler(httpd_req_t *req)
@@ -248,7 +253,8 @@ static esp_err_t root_handler(httpd_req_t *req)
         "  /adc_table - ADC calibration data\n"
         "  /ota - OTA update request\n"
         "  /version - Get firmware version\n"
-        "  /stop - Stop streaming\n";
+        "  /stop - Stop streaming\n"
+        "  /sample_rate?set=RATE - Set sample rate (Hz). Default is 50k.\n";
 
     httpd_resp_sendstr(req, msg);
 
@@ -396,6 +402,56 @@ static esp_err_t version_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t sample_rate_handler(httpd_req_t *req)
+{
+    // make sure no OTA is in progress.
+    if (ota_in_progress) {
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        return httpd_resp_sendstr(req, "OTA update in progress!\n");
+    }
+    
+    char query[128] = {0};
+    char new_sample_rate_str[16];
+    sprintf(new_sample_rate_str, "%ld", sample_rate_hz);
+
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
+        httpd_query_key_value(query, "set", new_sample_rate_str, sizeof(new_sample_rate_str));
+    }
+
+    if (strlen(new_sample_rate_str) == 0) {
+        char msg[128];
+        sprintf(msg, "{\"SampleRateHz\": %ld}\n", sample_rate_hz);
+        return httpd_resp_sendstr(req, msg);
+    }
+
+    int new_sample_rate = atoi(new_sample_rate_str);
+
+    if (new_sample_rate <= SOC_ADC_SAMPLE_FREQ_THRES_LOW) {
+        httpd_resp_set_status(req, "400 Bad Request");
+        return httpd_resp_sendstr(req, "{\"Message\":\"Invalid sample rate. Must be more than SOC_ADC_SAMPLE_FREQ_THRES_HIGH.\"}\n");
+    } else if (new_sample_rate > ABSOLUTE_MAX_SAMPLE_RATE_HZ) {
+        httpd_resp_set_status(req, "400 Bad Request");
+        return httpd_resp_sendstr(req, "{\"Message\":\"Invalid sample rate. Must be less than ABSOLUTE_MAX_SAMPLE_RATE_HZ (see firmware).\"}\n");
+    } else if (streaming) {
+        httpd_resp_set_status(req, "400 Bad Request");
+        return httpd_resp_sendstr(req, "{\"Message\":\"Cannot change sample rate while streaming.\"}\n");
+    }
+
+    if (new_sample_rate == sample_rate_hz) {
+        char msg[128];
+        sprintf(msg, "{\"SampleRateHz\": %ld,\n\"Message\": \"Same sample rate as already set - aborting\"}\n", sample_rate_hz);
+        return httpd_resp_sendstr(req, msg);
+    }
+
+    char msg[256];
+    sprintf(msg, "{\"SampleRateHz\": %d,\n\"Message\": \"Changing sample rate to %ld=>%d Hz\"}\n", new_sample_rate, sample_rate_hz, new_sample_rate);
+
+    adc_reconfigure_continuous(new_sample_rate);
+
+    httpd_resp_sendstr(req, msg);
+    return ESP_OK;
+}
+
 static void http_server_start(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -443,12 +499,20 @@ static void http_server_start(void)
         .user_ctx = NULL
     };
 
+    httpd_uri_t sample_rate_uri = {
+        .uri      = "/sample_rate",
+        .method   = HTTP_GET,
+        .handler  = sample_rate_handler,
+        .user_ctx = NULL
+    };
+
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &root_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &start_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &stop_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &adc_table_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &ota_upload_uri));
     ESP_ERROR_CHECK(httpd_register_uri_handler(server, &version_uri));
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &sample_rate_uri));
 }
 
 static void udp_stream_task(void *arg)
@@ -522,7 +586,7 @@ void app_main(void)
 
     wifi_init_softap();
     adc_init_fit();
-    adc_init_continuous(DEFAULT_SAMPLE_RATE_HZ);
+    adc_init_continuous();
 
     http_server_start();
 
