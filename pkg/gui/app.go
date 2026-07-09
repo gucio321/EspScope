@@ -24,6 +24,10 @@ import (
 )
 
 const (
+	// Expected firmware version (see Semantic Versioning).
+	// Firmware must be exactly FirmwareVersionMajor and at least FirmwareVersionMinor.
+	FirmwareVersionMajor, FirmwareVersionMinor = 1, 0
+
 	WindowW, WindowH    = 800, 600
 	AppName             = "ESP Scope"
 	GHURL               = "https://github.com/gucio321/EspScope"
@@ -458,7 +462,10 @@ func (a *App) connect() {
 	a.saveConfig()
 
 	go func() {
-		a.checkVersion()
+		if err := a.checkVersion(); err != nil {
+			glg.Errorf("ESP firmware version check failed. Check your WiFi connection. If the API supports OTA updates, go to File->Firmware Update and follow instructions. Got error: %v", err)
+		}
+
 		var err error
 		a.lookupTable, err = a.espManager.GetLookupTable()
 		if err != nil {
@@ -472,11 +479,23 @@ func (a *App) connect() {
 	}()
 }
 
-func (a *App) checkVersion() {
-	_, err := a.espManager.Version()
+func (a *App) checkVersion() error {
+	vi, err := a.espManager.Version()
 	if err != nil {
-		glg.Errorf("Unable to get ESP firmware version: %v", err)
+		return fmt.Errorf("getting ESP firmware version: %v", err)
 	}
+
+	// check version compatibility:
+	switch {
+	case vi.APIVersionMajor != FirmwareVersionMajor:
+		return fmt.Errorf("incompatible API version: expected %d.x, got %d.%d", FirmwareVersionMajor, vi.APIVersionMajor, vi.APIVersionMinor)
+	case vi.APIVersionMinor < FirmwareVersionMinor:
+		return fmt.Errorf("incompatible API version: expected at least %d.%d, got %d.%d", FirmwareVersionMajor, FirmwareVersionMinor, vi.APIVersionMajor, vi.APIVersionMinor)
+	}
+
+	glg.Infof("ESP firmware API version: %d.%d, build ID: %v (%s)", vi.APIVersionMajor, vi.APIVersionMinor, vi.CommitID, vi.BuildDate)
+
+	return nil
 }
 
 func (a *App) disconnect(safe bool) {

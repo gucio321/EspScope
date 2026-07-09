@@ -1,6 +1,7 @@
 package espmanager
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 type VersionInfo struct {
 	APIVersionMajor int
 	APIVersionMinor int
+	CommitID        string
+	BuildDate       string
 }
 
 func (m *ESPManager) Version() (*VersionInfo, error) {
@@ -39,6 +42,10 @@ func (m *ESPManager) Version() (*VersionInfo, error) {
 	}
 
 	glg.Debugf("Got version info string: %s", versionInfoString)
+
+	if err := json.Unmarshal(versionInfoString, result); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal version info string for: %v", err)
+	}
 
 	return result, nil
 }
