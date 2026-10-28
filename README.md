@@ -1,7 +1,12 @@
-<p style="text-align:center">
-<h1>EspScope</h1>
-<img widt="50%" src="./pkg/assets/logo.png">
-</p>
+<div style="text-align: center;">
+  <h1>EspScope</h1>
+  <img
+    align="right"
+    src="./pkg/assets/logo.png"
+    alt="EspScope logo"
+    style="width: 50%; height: auto;"
+  >
+</div>
 
 ## Description
 
