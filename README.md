@@ -46,7 +46,7 @@ $$
 Then you can calculate $V_{min}$ and $V_{max}$ with the following formulas:
 
 $$
-V_{min} = - 3.3 V \frac{R_1}{R_2} \\
+V_{min} = - 3.3 V \frac{R_1}{R_2} \\\\
 V_{max} = 3.3V * \left(1 + \frac{R_1}{R_3}\right)
 $$
 
