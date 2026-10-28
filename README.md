@@ -1,11 +1,13 @@
 <h1>EspScope</h1>
 
+<div>
   <img
     align="right"
     src="./pkg/assets/logo.png"
     alt="EspScope logo"
     style="width: 50%; height: auto;"
   >
+</div>
 
 ## Description
 
