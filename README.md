@@ -24,4 +24,4 @@ It uses an external machine (PC) as a display and also for performing heavy calc
 
 ## How it works?
 
-![Schematic](./PCB/EspScope_schematic.pdf)
+![Schematic](./PCB/EspScope_schematic.svg)
