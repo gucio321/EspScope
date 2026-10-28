@@ -64,7 +64,7 @@ $$
 ## Bill Of Material (BOM)
 
 | Qty | Item | Notes |
-|----|---|---|---|
+|----|---|---|
 | **__Electronics__** |  |  |
 | 1  | ESP32-C3 module | Main ESP module. Something like [this from AliExpress](https://pl.aliexpress.com/item/1005012143614522.html) |
 | 1 | $R_1$ Resistor for the `R1206` footprint | Recommended: $1 M\Omega$ resistor. I've used [AR1206-1M-0.1%](https://www.tme.eu/pl/details/ar1206-1m-0.1%25/rezystory-smd/viking/ar06btcv1004/) |
