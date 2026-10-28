@@ -1,5 +1,7 @@
-<h1 style="align:center">EspScope</h1>
-<img src="./pkg/assets/logo.png" style="align:center">
+<p style="text-align:center">
+<h1>EspScope</h1>
+<img src="./pkg/assets/logo.png">
+</p>
 
 ## Description
 
