@@ -1,6 +1,6 @@
 <p style="text-align:center">
 <h1>EspScope</h1>
-<img src="./pkg/assets/logo.png">
+<img widt="50%" src="./pkg/assets/logo.png">
 </p>
 
 ## Description
